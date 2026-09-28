@@ -1,0 +1,112 @@
+{
+  "valueCatalog": [
+    { "id": "never_abandon_allies", "text": "Не бросаю своих", "opposes": [ "survive_at_all_costs" ] },
+    { "id": "survive_at_all_costs", "text": "Выжить любой ценой", "opposes": [ "never_abandon_allies" ] },
+    { "id": "honor_over_gain", "text": "Честь превыше выгоды", "opposes": [ "ends_justify_means" ] },
+    { "id": "ends_justify_means", "text": "Цель оправдывает средства", "opposes": [ "honor_over_gain", "no_killing_unarmed" ] },
+    { "id": "no_killing_unarmed", "text": "Не убиваю безоружных", "opposes": [ "ends_justify_means" ] },
+    { "id": "never_leave_wounded", "text": "Раненых не оставляют", "opposes": [] },
+    { "id": "demands_explanations", "text": "Приказ без объяснений — неуважение", "opposes": [] },
+    { "id": "protect_the_weak", "text": "Защищать слабых", "opposes": [] }
+  ],
+
+  "heroes": [
+    {
+      "id": "tim",
+      "name": "Тим Ольховец",
+      "stars": 1,
+      "maxStars": 2,
+      "profession": "Деревенский парень",
+      "bio": "Сын пахаря из приграничной деревни. Пошёл за мастером, потому что дома его ничего не ждало.",
+      "dream": "Вернуться домой тем, кем можно гордиться",
+      "traits": { "courage": 60, "pride": 40, "empathy": 55, "discipline": 45, "ambition": 55, "pragmatism": 45 },
+      "values": [ "never_abandon_allies" ],
+      "trustInMaster": 55
+    },
+    {
+      "id": "marta",
+      "name": "Марта",
+      "stars": 1,
+      "maxStars": 2,
+      "profession": "Кухарка",
+      "bio": "Кормила солдат в обозе, пока обоз не разбили. Ворчит на всех и всех подкармливает.",
+      "dream": "Открыть свою таверну",
+      "traits": { "courage": 40, "pride": 45, "empathy": 70, "discipline": 60, "ambition": 35, "pragmatism": 65 },
+      "values": [ "never_leave_wounded" ],
+      "trustInMaster": 50
+    },
+    {
+      "id": "pip",
+      "name": "Пип",
+      "stars": 1,
+      "maxStars": 3,
+      "profession": "Подмастерье плотника",
+      "bio": "Сбежал от строгого мастера-плотника. Боится почти всего, но руки золотые.",
+      "dream": "Чтобы его перестали считать мальчишкой",
+      "traits": { "courage": 25, "pride": 35, "empathy": 55, "discipline": 40, "ambition": 50, "pragmatism": 55 },
+      "values": [ "survive_at_all_costs" ],
+      "trustInMaster": 45
+    },
+    {
+      "id": "gron",
+      "name": "Грон",
+      "stars": 1,
+      "maxStars": 2,
+      "profession": "Кузнец",
+      "bio": "Добродушный кузнец из горной деревни. В драке теряет голову, а после — стыдится.",
+      "dream": "Выковать оружие из металла Башни",
+      "traits": { "courage": 70, "pride": 30, "empathy": 65, "discipline": 30, "ambition": 30, "pragmatism": 40 },
+      "values": [ "protect_the_weak" ],
+      "trustInMaster": 55
+    },
+    {
+      "id": "ari",
+      "name": "Ари Солен",
+      "stars": 1,
+      "maxStars": 3,
+      "profession": "Охотница",
+      "bio": "Дочь деревенского охотника. Стреляет лучше отца и не даёт никому об этом забыть.",
+      "dream": "Стать охотницей, о которой сложат песни",
+      "traits": { "courage": 60, "pride": 80, "empathy": 35, "discipline": 40, "ambition": 80, "pragmatism": 55 },
+      "values": [ "demands_explanations" ],
+      "trustInMaster": 40
+    },
+    {
+      "id": "vale",
+      "name": "Вейл",
+      "stars": 2,
+      "maxStars": 4,
+      "profession": "Разбойник",
+      "bio": "Грабил караваны на лесных трактах, пока его банду не перебили. Обаятелен, жесток и всегда думает о своей выгоде.",
+      "dream": "Сколотить состояние и больше ни от кого не зависеть",
+      "traits": { "courage": 65, "pride": 70, "empathy": 10, "discipline": 35, "ambition": 85, "pragmatism": 90 },
+      "values": [ "ends_justify_means", "survive_at_all_costs" ],
+      "trustInMaster": 25
+    },
+    {
+      "id": "anselm",
+      "name": "Брат Ансельм",
+      "stars": 2,
+      "maxStars": 3,
+      "profession": "Странствующий жрец",
+      "bio": "Ушёл из монастыря, чтобы нести свет туда, где его нет. Твёрдо знает, что правильно, и не стесняется об этом говорить.",
+      "dream": "Вернуть к добру хотя бы одну пропащую душу",
+      "traits": { "courage": 55, "pride": 60, "empathy": 75, "discipline": 85, "ambition": 30, "pragmatism": 20 },
+      "values": [ "honor_over_gain", "no_killing_unarmed" ],
+      "trustInMaster": 60
+    }
+  ],
+
+  "defaultRelationship": { "trust": 50, "respect": 50, "affection": 30, "fear": 0, "rivalry": 0 },
+  "defaultMasterRelationship": { "respect": 40, "affection": 20, "fear": 10, "rivalry": 0 },
+
+  "relationshipOverrides": [
+    { "from": "marta", "to": "pip", "affection": 60 },
+    { "from": "gron", "to": "pip", "affection": 55 },
+    { "from": "pip", "to": "gron", "respect": 70 },
+    { "from": "ari", "to": "tim", "respect": 30 },
+    { "from": "tim", "to": "ari", "respect": 65 },
+    { "from": "pip", "to": "vale", "fear": 40 },
+    { "from": "marta", "to": "vale", "trust": 30 }
+  ]
+}

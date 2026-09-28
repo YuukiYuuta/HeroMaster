@@ -1,0 +1,54 @@
+{
+  "team": {
+    "minSize": 4,
+    "maxSize": 5
+  },
+
+  "world": {
+    "relationshipJitter": 5,
+    "opposingValuesTrustPenalty": 20,
+    "opposingValuesRivalry": 30
+  },
+
+  "stars": [
+    { "stars": 1, "summonRatePerMillion": 930990, "skillSlots": 1, "learningSpeedPercent": 80 },
+    { "stars": 2, "summonRatePerMillion": 60000, "skillSlots": 2, "learningSpeedPercent": 90 },
+    { "stars": 3, "summonRatePerMillion": 6400, "skillSlots": 3, "learningSpeedPercent": 100 },
+    { "stars": 4, "summonRatePerMillion": 2600, "skillSlots": 4, "learningSpeedPercent": 115 },
+    { "stars": 5, "summonRatePerMillion": 10, "skillSlots": 5, "learningSpeedPercent": 130 },
+    { "stars": 6, "summonRatePerMillion": 0, "skillSlots": 6, "learningSpeedPercent": 150 }
+  ],
+
+  "memory": {
+    "maxBeliefs": 30,
+    "maxKeyMemories": 10,
+    "keyMemoryImportance": 9,
+    "forgetMinorEventsAfterDays": 14
+  },
+
+  "trust": {
+    "discontentedBelow": 35,
+    "onEdgeBelow": 20,
+    "boycottBelow": 10,
+    "daysOnEdgeBeforeBoycott": 2
+  },
+
+  "advice": {
+    "spamWindowTurns": 3,
+    "maxAdviceInWindow": 2,
+    "spamTrustPenalty": 3,
+    "contradictionTrustPenalty": 4,
+    "successTrustGain": 2,
+    "failureTrustLoss": 3
+  },
+
+  "learning": {
+    "strengthPerSuccess": 15,
+    "strengthLossPerFailure": 10,
+    "learnedThreshold": 60,
+    "decayPerIdleDay": 1,
+    "teachingStrength": 8,
+    "respectedTeacherBonusPercent": 50,
+    "rivalRefusesTeachingAbove": 50
+  }
+}

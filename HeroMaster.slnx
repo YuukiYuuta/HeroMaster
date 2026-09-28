@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HeroMaster.Cli/HeroMaster.Cli.csproj" />
+    <Project Path="src/HeroMaster.Core/HeroMaster.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HeroMaster.Core.Tests/HeroMaster.Core.Tests.csproj" />
+  </Folder>
+</Solution>
