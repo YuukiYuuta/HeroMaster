@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Панель мастера",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/HeroMaster.Web", "--no-launch-profile"],
+      "port": 5080
+    }
+  ]
+}

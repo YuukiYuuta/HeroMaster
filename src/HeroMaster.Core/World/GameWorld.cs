@@ -13,12 +13,13 @@ namespace HeroMaster.Core.World
     /// </summary>
     public sealed class GameWorld
     {
-        public const int CurrentFormatVersion = 1;
+        public const int CurrentFormatVersion = 2;
 
         public int FormatVersion { get; set; } = CurrentFormatVersion;
         public ulong Seed { get; set; }
         public int Day { get; set; }
         public Pcg32 Rng { get; set; } = new();
+        public MasterState Master { get; set; } = new();
         public List<Hero> Heroes { get; set; } = new();
         public List<Relationship> Relationships { get; set; } = new();
         public EventLog Log { get; set; } = new();
@@ -26,6 +27,8 @@ namespace HeroMaster.Core.World
         public Hero GetHero(string id) =>
             Heroes.FirstOrDefault(h => h.Id == id)
             ?? throw new KeyNotFoundException($"Нет героя с id «{id}».");
+
+        public bool HasHero(string id) => Heroes.Any(h => h.Id == id);
 
         /// <summary>Что <paramref name="from"/> думает о <paramref name="to"/>.</summary>
         public Relationship GetRelationship(string from, string to) =>
@@ -35,5 +38,20 @@ namespace HeroMaster.Core.World
         public Relationship TowardMaster(string heroId) => GetRelationship(heroId, Ids.Master);
 
         public static int Clamp(int value, int min = 0, int max = 100) => Math.Max(min, Math.Min(max, value));
+    }
+
+    /// <summary>Ресурсы мастера.</summary>
+    public sealed class MasterState
+    {
+        public int Gold { get; set; }
+        /// <summary>Добыча последней вылазки, которую мастер ещё не поделил. null — делить нечего.</summary>
+        public LootPool? PendingLoot { get; set; }
+    }
+
+    public sealed class LootPool
+    {
+        public int Amount { get; set; }
+        public int FromDay { get; set; }
+        public List<string> Participants { get; set; } = new();
     }
 }

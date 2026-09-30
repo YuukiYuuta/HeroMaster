@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Панель мастера</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">
+      <h1>Панель мастера</h1>
+      <span class="sub">прототип, этап 0</span>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="actions">
+      <label class="seed">Зерно <input id="seed" type="number" min="0" placeholder="случайно"></label>
+      <button id="newGame" class="secondary">Новая партия</button>
+    </div>
+  </header>
+
+  <main id="app">
+    <section class="left">
+      <div id="errors" class="errors" hidden></div>
+
+      <div class="panel" id="lootPanel" hidden>
+        <h2>Добыча прошлой вылазки</h2>
+        <p class="hint" id="lootInfo"></p>
+        <div id="lootRows" class="loot-rows"></div>
+        <div class="loot-actions">
+          <button id="lootEqual" class="secondary">Поровну</button>
+          <label class="check"><input type="checkbox" id="keepLoot"> Оставить всё себе</label>
+          <span id="lootRemain" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Отряд</h2>
+          <span class="muted" id="teamInfo"></span>
+        </div>
+        <p class="hint">Отметьте, кого отправить на вылазку. Отказаться идти герои не могут, но в бою каждый решает сам. Намёк и подарок — по желанию. Нажмите на имя, чтобы узнать героя ближе.</p>
+        <div id="heroes" class="heroes"></div>
+      </div>
+
+      <div class="go-row">
+        <button id="runDay" class="primary">Прожить день</button>
+      </div>
+    </section>
+
+    <section class="right panel">
+      <div class="panel-head">
+        <h2 id="journalTitle">Журнал дня</h2>
+        <div class="journal-tools">
+          <label class="check"><input type="checkbox" id="hideMinor"> Скрыть мелочи</label>
+          <button id="fullLog" class="secondary small">Весь журнал</button>
+        </div>
+      </div>
+      <div id="journal" class="journal"></div>
+    </section>
+  </main>
+
+  <div id="start" class="start" hidden>
+    <div class="panel">
+      <h2>Партия не начата</h2>
+      <p>Нажмите «Новая партия» вверху. Одно и то же зерно всегда даёт одинаковое начало.</p>
+    </div>
+  </div>
+
+  <dialog id="heroDialog">
+    <div id="heroDetails"></div>
+    <form method="dialog"><button class="secondary">Закрыть</button></form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

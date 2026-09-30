@@ -21,7 +21,8 @@ namespace HeroMaster.Core.World
             {
                 Seed = seed,
                 Day = 0,
-                Rng = new Pcg32(seed)
+                Rng = new Pcg32(seed),
+                Master = new MasterState { Gold = config.Master.StartGold }
             };
 
             foreach (var def in catalog.Heroes)
@@ -30,6 +31,9 @@ namespace HeroMaster.Core.World
                 {
                     Id = def.Id,
                     Name = def.Name,
+                    NameGenitive = def.NameGenitive,
+                    NameInstrumental = def.NameInstrumental,
+                    Gender = def.Gender,
                     Stars = def.Stars,
                     MaxStars = def.MaxStars,
                     Profession = def.Profession,
@@ -83,6 +87,20 @@ namespace HeroMaster.Core.World
                     Fear = m.Fear ?? 0,
                     Rivalry = m.Rivalry ?? 0
                 });
+            }
+
+            // Стартовый статус — по стартовому доверию, без событий: недоверчивый герой недоволен с первого дня.
+            foreach (var hero in world.Heroes)
+                hero.State.Status = Simulation.NightPhase.InitialStatus(world.TowardMaster(hero.Id).Trust, config);
+
+            // Стартовая решимость: героя забросили в Башню против воли. Прагматики и честолюбцы осваиваются быстрее.
+            var rc = config.Resolve;
+            foreach (var hero in world.Heroes)
+            {
+                var t = hero.Traits;
+                hero.State.Resolve = GameWorld.Clamp(t.Courage * rc.StartCouragePercent / 100
+                                                     + t.Ambition * rc.StartAmbitionPercent / 100
+                                                     + t.Pragmatism * rc.StartPragmatismPercent / 100);
             }
 
             world.Log.Append(

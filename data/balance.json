@@ -26,11 +26,151 @@
     "forgetMinorEventsAfterDays": 14
   },
 
+  "master": {
+    "startGold": 50
+  },
+
   "trust": {
     "discontentedBelow": 35,
     "onEdgeBelow": 20,
     "boycottBelow": 10,
-    "daysOnEdgeBeforeBoycott": 2
+    "daysOnEdgeBeforeBoycott": 2,
+    "recoverMargin": 5,
+    "broodTrustLoss": 1
+  },
+
+  "resolve": {
+    "startCouragePercent": 10,
+    "startAmbitionPercent": 20,
+    "startPragmatismPercent": 20,
+    "dailyGain": 1,
+    "expeditionSurvivedGain": 3,
+    "injuryLoss": 5,
+    "purposeThreshold": 50
+  },
+
+  "obedience": {
+    "resolvePercent": 20,
+    "disciplinePercent": 40,
+    "fatiguePercent": 50,
+    "stressPercent": 20,
+    "rivalInTeamPenalty": 10,
+    "rivalryThreshold": 50,
+    "friendInTeamBonus": 5,
+    "friendAffectionThreshold": 60,
+    "noExplanationPenalty": 10,
+    "jitter": 5,
+    "enthusiasticFrom": 70,
+    "compliesFrom": 45,
+    "grudgingFrom": 25
+  },
+
+  "combat": {
+    "powerPerStar": 20,
+    "experiencePerPower": 10,
+    "experienceCapPerStar": 10,
+    "fatiguePowerLossPercent": 40,
+    "injuredPowerPercent": 50,
+    "allInEffortPercent": 110,
+    "halfHeartedEffortPercent": 90,
+    "selfDefenseEffortPercent": 50,
+    "witnessMoraleChance": 50,
+    "witnessCouragePercent": 50,
+    "witnessAffectionPercent": 25,
+    "panicCourageBelow": 30
+  },
+
+  "expedition": {
+    "minMembers": 3,
+    "encounters": 3,
+    "attacksPerEncounter": 2,
+    "enemyPowerMin": 15,
+    "enemyPowerMax": 35,
+    "lootPerHundredPower": 15,
+    "lootJitterPercent": 20,
+    "fatigueGain": 35,
+    "stressGainMax": 20,
+    "injuryChancePercent": 2,
+    "injuryPowerGapPercent": 25,
+    "injuryChancePerTenFatigue": 2,
+    "injuryStress": 15,
+    "experienceGain": 12,
+    "successTrustGain": 1,
+    "injuredTrustLoss": 5,
+    "sentTiredThreshold": 60,
+    "sentTiredTrustLoss": 4,
+    "refuseDangerPercent": 5,
+    "boycottDangerPercent": 15
+  },
+
+  "loot": {
+    "fairTolerancePercent": 15,
+    "fairShareTrustGain": 1,
+    "trustLossPerTenPercent": 2,
+    "maxTrustChange": 8,
+    "keptAllTrustLoss": 6,
+    "prideExpectationPercent": 20
+  },
+
+  "gifts": {
+    "kinds": [
+      { "id": "food", "name": "угощение", "cost": 4, "baseTrust": 2, "trait": "", "traitBonusMax": 0 },
+      { "id": "gear", "name": "снаряжение", "cost": 15, "baseTrust": 2, "trait": "pragmatism", "traitBonusMax": 4 },
+      { "id": "trinket", "name": "украшение", "cost": 12, "baseTrust": 1, "trait": "pride", "traitBonusMax": 5 }
+    ],
+    "repeatWindowDays": 3,
+    "repeatValuePercent": 50
+  },
+
+  "activities": {
+    "jitter": 10,
+    "hintBonusMax": 30,
+    "hintIgnoredBelowTrust": 30,
+    "hintSpitePride": 70,
+    "hintSpitePenalty": 15,
+
+    "restBase": 10,
+    "restFatiguePercent": 70,
+    "restStressPercent": 20,
+    "trainBase": 5,
+    "trainAmbitionPercent": 15,
+    "trainResolvePercent": 40,
+    "broodDespairPercent": 15,
+    "trainDisciplinePercent": 20,
+    "trainFatiguePercent": 60,
+    "socializeBase": 20,
+    "socializeEmpathyPercent": 25,
+    "socializeStressPercent": 20,
+    "workBase": 15,
+    "workDisciplinePercent": 25,
+    "broodStressPercent": 40,
+    "broodDiscontentedBonus": 15,
+    "broodOnEdgeBonus": 30,
+    "broodBoycottBonus": 50,
+
+    "restFatigueRecovery": 40,
+    "restStressRecovery": 15,
+    "trainFatigue": 15,
+    "trainExperience": 10,
+    "workFatigue": 10,
+    "workGold": 3,
+    "socializeAffection": 4,
+    "socializeTrust": 2,
+    "socializeStressRecovery": 8,
+    "quarrelChancePerConflict": 25,
+    "quarrelChancePerTenRivalry": 3,
+    "quarrelRivalry": 8,
+    "quarrelTrustLoss": 6,
+    "quarrelAffectionLoss": 4,
+    "quarrelStress": 10,
+    "tensionChancePerConflict": 4,
+    "tensionChancePerTenRivalry": 1,
+    "tensionChanceMax": 50,
+    "rivalryDecayPerNight": 1,
+    "repeatPenalty": 6,
+    "repeatPenaltyMax": 18,
+    "nightFatigueRecovery": 10,
+    "nightStressRecovery": 5
   },
 
   "advice": {

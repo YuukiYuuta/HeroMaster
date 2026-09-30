@@ -7,8 +7,19 @@
 - `data/heroes.json` — герои, их черты, ценности и стартовые отношения.
 - `data/balance.json` — все числа баланса (пороги доверия, скорость обучения и т. д.).
 - `src/HeroMaster.Core` — ядро симуляции (netstandard2.1, C# 9 — совместимо с Unity).
-- `src/HeroMaster.Cli` — консольная оболочка для игры в прототип.
+- `src/HeroMaster.Web` — панель мастера в браузере (основной способ играть и проверять).
+- `src/HeroMaster.Cli` — консольная оболочка (для быстрых прогонов).
 - `tests/HeroMaster.Core.Tests` — автотесты ядра.
+
+## Панель мастера (удобнее всего)
+
+Запуск, затем откройте http://localhost:5080 в браузере:
+
+```bash
+dotnet run --project src/HeroMaster.Web
+```
+
+Карточки героев, решения мастера галочками и списками, делёж добычи, журнал дня. По клику на имя — всё о герое.
 
 ## Команды
 
@@ -21,12 +32,18 @@ dotnet run --project src/HeroMaster.Cli -- new 42
 ```
 
 ```bash
+dotnet run --project src/HeroMaster.Cli -- play
+```
+
+```bash
 dotnet run --project src/HeroMaster.Cli -- roster
 ```
 
 ```bash
 dotnet run --project src/HeroMaster.Cli -- log
 ```
+
+`play` — игра день за днём: отправить команду на вылазку (`team`), поделить добычу (`loot` / `keep`), сделать подарок (`gift`), намекнуть герою, чем заняться (`hint`), и прожить день (`go`). Внутри `play` команда `help` показывает примеры.
 
 `new` без числа берёт случайное зерно. Одно и то же зерно всегда даёт одинаковое начало партии.
 Сохранение лежит в `saves/world.json`.

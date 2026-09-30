@@ -45,6 +45,8 @@ namespace HeroMaster.Core.Content
                     errors.Add($"{hero.Id}: maxStars = {hero.MaxStars}, ожидается от stars ({hero.Stars}) до 6.");
                 if (string.IsNullOrWhiteSpace(hero.Profession))
                     errors.Add($"{hero.Id}: не указана профессия.");
+                if (string.IsNullOrWhiteSpace(hero.NameGenitive) || string.IsNullOrWhiteSpace(hero.NameInstrumental))
+                    errors.Add($"{hero.Id}: нужны падежные формы имени (nameGenitive, nameInstrumental).");
             }
 
             foreach (var value in ValueCatalog)
@@ -100,6 +102,9 @@ namespace HeroMaster.Core.Content
     {
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
+        public string NameGenitive { get; set; } = "";
+        public string NameInstrumental { get; set; } = "";
+        public Gender Gender { get; set; }
         public int Stars { get; set; } = 1;
         public int MaxStars { get; set; } = 1;
         public string Profession { get; set; } = "";
