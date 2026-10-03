@@ -26,9 +26,17 @@ app.UseStaticFiles();
 
 app.MapGet("/api/state", (GameSession game) => game.State());
 app.MapPost("/api/new", (GameSession game, NewGameRequest request) => game.NewGame(request.Seed));
-app.MapPost("/api/day", (GameSession game, MasterDecisions decisions) =>
+// День: начать (если есть команда — начнётся живой бой), вести бой тик за тиком, закончить.
+app.MapPost("/api/day/begin", (GameSession game, MasterDecisions decisions) =>
 {
-    var (errors, state) = game.RunDay(decisions);
+    var (errors, state) = game.BeginDay(decisions);
+    return errors.Count > 0 ? Results.BadRequest(new { errors }) : Results.Ok(state);
+});
+app.MapPost("/api/battle/step", (GameSession game, StepRequest request) =>
+    game.StepBattle(request.Ticks, request.FeedFrom) is { } snapshot ? Results.Ok(snapshot) : Results.NotFound());
+app.MapPost("/api/day/finish", (GameSession game) =>
+{
+    var (errors, state) = game.FinishDay();
     return errors.Count > 0 ? Results.BadRequest(new { errors }) : Results.Ok(state);
 });
 app.MapGet("/api/hero/{id}", (GameSession game, string id) => game.Hero(id) is { } hero ? Results.Ok(hero) : Results.NotFound());
@@ -46,3 +54,4 @@ static string FindProjectRoot(string start)
 }
 
 record NewGameRequest(ulong? Seed);
+record StepRequest(int Ticks, int FeedFrom);

@@ -108,7 +108,13 @@ namespace HeroMaster.Core.Battle
             int day = world.Day;
             var ids = s.Heroes.Select(h => h.Hero.Id).ToList();
             string verdict = s.Outcome == BattleOutcome.Victory ? "Оборона выдержала" : "Отряд погиб";
-            var stats = string.Join("; ", s.Heroes.Select(h => $"{h.Hero.Name}: убил {h.Kills}{(h.Healed > 0 ? $", вылечил {h.Healed}" : "")}{(h.Dead ? " — пал" : h.Injured ? " — ранен" : "")}"));
+            var stats = string.Join("; ", s.Heroes.Select(h =>
+            {
+                var g = h.Hero;
+                return $"{g.Name}: {g.G("убил", "убила")} {h.Kills}"
+                       + (h.Healed > 0 ? $", {g.G("вылечил", "вылечила")} {h.Healed}" : "")
+                       + (h.Dead ? $" — {g.G("пал", "пала")}" : h.Injured ? $" — {g.G("ранен", "ранена")}" : "");
+            }));
             var result = world.Log.Append(day, DayPhase.Expedition, "expedition_result",
                 $"{verdict}: врагов убито {s.MonstersKilled}, добыча — {s.Loot} золота. {stats}.",
                 importance: 6, emotion: s.Outcome == BattleOutcome.Victory ? 2 : -5,

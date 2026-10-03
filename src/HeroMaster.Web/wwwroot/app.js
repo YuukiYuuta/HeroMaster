@@ -50,6 +50,7 @@ async function load() {
   const { data } = await api("/api/state");
   state = data;
   render();
+  if (state.battle) enterBattle(state.battle); // бой шёл — продолжаем показ
 }
 
 function render() {
@@ -223,20 +224,214 @@ async function runDay() {
     hints: decisions.hints,
   };
   $("runDay").disabled = true;
-  const { ok, data } = await api("/api/day", body);
+  const { ok, data } = await api("/api/day/begin", body);
   $("runDay").disabled = false;
   if (!ok) {
     showErrors(data.errors || ["Не удалось прожить день."]);
     return;
   }
   showErrors(null);
-  state = data;
   decisions = freshDecisions();
+  if (data.battle) {
+    state = data;
+    enterBattle(data.battle);
+    return;
+  }
+  afterDay(data);
+}
+
+function afterDay(data) {
+  state = data;
   showingFullLog = false;
   $("fullLog").textContent = "Весь журнал";
+  $("battle").hidden = true;
   render();
   $("journal").scrollTop = 0;
 }
+
+// ---------------- Живой бой ----------------
+
+const CONDUCT = {
+  allIn: ["по полной", false],
+  steady: ["честно", false],
+  halfHearted: ["вполсилы", true],
+  passive: ["не дерётся", true],
+  abandoned: ["бойкот", true],
+  selfDefense: ["отбивается", true],
+};
+const ROLE = { melee: "", ranged: "стрелок", healer: "лекарь" };
+
+const battle = { snap: null, feedCount: 0, playing: true, speed: 1, busy: false, timer: null };
+
+function enterBattle(snap) {
+  battle.snap = null;
+  battle.feedCount = 0;
+  battle.playing = true;
+  $("bFeed").innerHTML = "";
+  $("bResults").hidden = true;
+  $("app").hidden = true;
+  $("battle").hidden = false;
+  setSpeed(battle.speed);
+  applySnapshot(snap);
+  if (!battle.timer) battle.timer = setInterval(battleLoop, 300);
+  window.scrollTo(0, 0);
+}
+
+async function battleLoop() {
+  if (!battle.snap || battle.busy || !battle.playing || battle.snap.outcome !== "running") return;
+  await stepBattle(battle.speed);
+}
+
+async function stepBattle(ticks) {
+  battle.busy = true;
+  const { ok, data } = await api("/api/battle/step", { ticks, feedFrom: battle.feedCount });
+  battle.busy = false;
+  if (ok) applySnapshot(data);
+}
+
+async function skipToEnd() {
+  battle.playing = false;
+  updatePlayButton();
+  while (battle.snap && battle.snap.outcome === "running") await stepBattle(50);
+}
+
+function applySnapshot(snap) {
+  battle.snap = snap;
+  appendFeed(snap.feed.slice(Math.max(0, battle.feedCount - snap.feedFrom)));
+  battle.feedCount = snap.feedFrom + snap.feed.length;
+
+  $("bTitle").textContent = snap.mission.name;
+  $("bDesc").textContent = snap.mission.description;
+  const alive = snap.heroes.filter((h) => !h.dead).length;
+  const wave = snap.nextWaveTick ? `следующая волна через ${Math.max(0, snap.nextWaveTick - snap.tick)}` : "все волны вышли";
+  $("bStats").innerHTML =
+    `<span>Волна ${snap.wavesSpawned} из ${snap.totalWaves}</span><span class="muted">${wave}</span>` +
+    `<span>Убито врагов: ${snap.monstersKilled}</span><span>Добыча: ${snap.loot}</span><span>В строю: ${alive}/${snap.heroes.length}</span>`;
+  renderMap(snap);
+  updatePlayButton();
+  if (snap.outcome !== "running") showResults(snap);
+}
+
+function renderMap(snap) {
+  // Зоны прижаты к краям с запасом, чтобы рамки не вылезали за карту.
+  const pos = (z) => ({ x: Math.min(86, Math.max(14, z.x)), y: Math.min(78, Math.max(9, z.y)) });
+  const byId = Object.fromEntries(snap.mission.zones.map((z) => [z.id, z]));
+  const drawn = new Set();
+  let lines = "";
+  for (const z of snap.mission.zones) {
+    for (const l of z.links) {
+      const key = [z.id, l].sort().join("|");
+      if (drawn.has(key) || !byId[l]) continue;
+      drawn.add(key);
+      const a = pos(z), b = pos(byId[l]);
+      lines += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" />`;
+    }
+  }
+
+  const zonesHtml = snap.mission.zones.map((z) => {
+    const p = pos(z);
+    const heroes = snap.heroes.filter((h) => h.zone === z.id);
+    const monsters = snap.monsters.filter((m) => m.zone === z.id);
+    const tags = [];
+    if (z.spawn) tags.push("отсюда идут враги");
+    if (!z.spawn && z.width <= 2) tags.push("узкий проход");
+    if (z.cover > 0) tags.push(`укрытие ${z.cover}%`);
+    if (!z.spawn && z.width >= 5) tags.push("открытое место");
+    const cls = ["zone", z.spawn ? "spawn" : "", heroes.some((h) => !h.dead) ? "heroes" : "", heroes.some((h) => !h.dead) && monsters.length ? "fight" : ""].join(" ");
+    const mon = monsters.map((m) => `${m.name} ×${m.count}`).join(", ");
+    const chips = heroes.map((h) => {
+      const [label, bad] = CONDUCT[h.conduct] ?? [h.conduct, false];
+      const hpPct = Math.max(0, Math.round((h.hp * 100) / h.maxHp));
+      const role = ROLE[h.role] ? ` · ${ROLE[h.role]}` : "";
+      const chipCls = ["chip", h.dead ? "dead" : "", h.injured || hpPct < 35 ? "hurt" : "", h.zone !== h.targetZone ? "moving" : ""].join(" ");
+      return `<div class="${chipCls}" title="${escapeHtml(h.name)}: ${h.hp}/${h.maxHp}">
+          <span class="nm">${escapeHtml(h.name)}</span>
+          <span class="cd ${bad ? "bad" : ""}">${h.dead ? "пал" : label}${role}</span>
+          <div class="hp"><div style="width:${hpPct}%"></div></div>
+        </div>`;
+    }).join("");
+    return `<div class="${cls}" style="left:${p.x}%;top:${p.y}%">
+        <div class="zone-name">${escapeHtml(z.name)}</div>
+        <div class="zone-tags">${tags.join(" · ")}</div>
+        ${mon ? `<div class="zone-monsters">${escapeHtml(mon)}</div>` : ""}
+        <div class="zone-heroes">${chips}</div>
+      </div>`;
+  }).join("");
+
+  $("bMap").innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>${zonesHtml}`;
+}
+
+function appendFeed(entries) {
+  const feed = $("bFeed");
+  const hideKills = $("bHideKills").checked;
+  const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 60;
+  for (const f of entries) {
+    if (f.kind === "arrived") continue;
+    const cls = [
+      "event",
+      f.kind === "kill" ? "kill" : "",
+      f.importance <= 2 ? "minor" : "",
+      f.importance >= 7 ? "major" : "",
+      f.importance >= 9 ? "big" : "",
+      f.emotion < 0 ? "neg" : f.emotion > 0 ? "pos" : "",
+    ].join(" ");
+    const div = document.createElement("div");
+    div.className = cls;
+    div.hidden = hideKills && f.kind === "kill";
+    div.innerHTML = `<span class="tick">${f.tick}</span>${escapeHtml(f.text)}`;
+    feed.appendChild(div);
+  }
+  if (nearBottom) feed.scrollTop = feed.scrollHeight;
+}
+
+function showResults(snap) {
+  const win = snap.outcome === "victory";
+  const rows = [...snap.heroes]
+    .sort((a, b) => b.score - a.score)
+    .map((h) => {
+      const status = h.dead ? '<span class="verdict-lose">пал</span>' : h.injured ? "ранен" : "цел";
+      const mvp = h.id === snap.mvp ? ' <span class="mvp">MVP</span>' : "";
+      return `<tr><td>${escapeHtml(h.name)}${mvp}</td><td class="n">${h.kills}</td><td class="n">${h.damageDealt}</td><td class="n">${h.healed}</td><td>${status}</td></tr>`;
+    }).join("");
+  $("bResults").innerHTML = `
+    <h2 class="${win ? "verdict-win" : "verdict-lose"}">${win ? "Оборона выдержала" : "Отряд погиб"}</h2>
+    <p>Убито врагов: <b>${snap.monstersKilled}</b> · добыча: <b>${snap.loot}</b> золота · тиков боя: ${snap.tick}</p>
+    <table><tr><th>Герой</th><th>Убил</th><th>Урон</th><th>Вылечил</th><th>Итог</th></tr>${rows}</table>
+    <button id="bFinish" class="primary">Вернуться на базу</button>`;
+  $("bResults").hidden = false;
+  $("bFinish").addEventListener("click", finishDay);
+}
+
+async function finishDay() {
+  $("bFinish").disabled = true;
+  const { ok, data } = await api("/api/day/finish", {});
+  if (!ok) {
+    $("bFinish").disabled = false;
+    alert((data.errors || ["Не удалось закончить день."]).join("\n"));
+    return;
+  }
+  battle.snap = null;
+  afterDay(data);
+}
+
+function setSpeed(speed) {
+  battle.speed = speed;
+  document.querySelectorAll("[data-speed]").forEach((b) => b.classList.toggle("active", Number(b.dataset.speed) === speed));
+}
+
+function updatePlayButton() {
+  const running = battle.snap && battle.snap.outcome === "running";
+  $("bPlay").disabled = !running;
+  $("bSkip").disabled = !running;
+  $("bPlay").textContent = battle.playing ? "Пауза" : "Продолжить";
+}
+
+$("bPlay").addEventListener("click", () => { battle.playing = !battle.playing; updatePlayButton(); });
+$("bSkip").addEventListener("click", skipToEnd);
+document.querySelectorAll("[data-speed]").forEach((b) => b.addEventListener("click", () => setSpeed(Number(b.dataset.speed))));
+$("bHideKills").addEventListener("change", (e) => {
+  document.querySelectorAll("#bFeed .kill").forEach((el) => (el.hidden = e.target.checked));
+});
 
 async function newGame() {
   if (state && state.hasGame && !confirm("Начать новую партию? Текущая будет перезаписана.")) return;
@@ -245,6 +440,8 @@ async function newGame() {
   state = data;
   decisions = freshDecisions();
   showingFullLog = false;
+  battle.snap = null;
+  $("battle").hidden = true;
   showErrors(null);
   render();
 }

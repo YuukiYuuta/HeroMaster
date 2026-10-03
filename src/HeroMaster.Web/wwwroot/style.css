@@ -173,6 +173,64 @@ main {
 
 .start { display: flex; justify-content: center; padding: 40px 20px; }
 
+/* ---------- Живой бой ---------- */
+.battle { padding: 16px 20px 40px; }
+.battle-head { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+.battle-title { max-width: 520px; }
+.battle-title .hint { margin-bottom: 0; }
+.battle-stats { display: flex; gap: 16px; flex-wrap: wrap; font-weight: 600; }
+.battle-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.speeds { display: inline-flex; gap: 4px; }
+.speeds button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.battle-body { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 1000px) { .battle-body { grid-template-columns: 1fr; } }
+
+.map { position: relative; width: 100%; aspect-ratio: 1 / 0.95; min-height: 580px; }
+.map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map line { stroke: var(--line); stroke-width: 0.6; stroke-dasharray: 1.5 1.2; }
+.zone {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 25%;
+  min-height: 64px;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 12px;
+  box-shadow: 0 1px 0 rgb(0 0 0 / .04);
+}
+.zone.spawn { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 7%, var(--panel)); }
+.zone.heroes { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.zone.fight { background: color-mix(in srgb, var(--warn) 12%, var(--panel)); }
+.zone-name { font-weight: 600; font-size: 12.5px; }
+.zone-tags { color: var(--muted); font-size: 11px; }
+.zone-monsters { color: var(--bad); margin-top: 3px; }
+.zone-heroes { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.chip { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 6px; align-items: center; }
+.chip .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip .cd { color: var(--muted); font-size: 10.5px; white-space: nowrap; }
+.chip .hp { grid-column: 1 / -1; height: 4px; background: var(--bar-bg); border-radius: 2px; overflow: hidden; }
+.chip .hp > div { height: 100%; background: var(--good); }
+.chip.hurt .hp > div { background: var(--bad); }
+.chip.dead { opacity: .55; text-decoration: line-through; }
+.chip.moving .nm::after { content: " →"; color: var(--muted); font-weight: 400; }
+.cd.bad { color: var(--bad); }
+
+.feed-panel { position: sticky; top: 76px; }
+.feed { max-height: 62vh; overflow: auto; font-size: 13px; }
+.feed .event .tick { color: var(--muted); font-size: 11px; margin-right: 6px; }
+
+.results h2 { margin-bottom: 8px; }
+.results table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0 12px; }
+.results th, .results td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+.results td.n { text-align: right; }
+.results .mvp { color: var(--warn); font-weight: 700; }
+.verdict-win { color: var(--good); }
+.verdict-lose { color: var(--bad); }
+
 dialog {
   border: 1px solid var(--line);
   border-radius: 14px;

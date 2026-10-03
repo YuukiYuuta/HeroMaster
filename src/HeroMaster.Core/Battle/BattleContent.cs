@@ -8,8 +8,21 @@ namespace HeroMaster.Core.Battle
     {
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
-        /// <summary>Родительный падеж множественного числа: «4 гоблинов» не говорят, а «волна из 4 гоблинов» — да.</summary>
+        /// <summary>Форма для 2–4: «3 гоблина», «2 пещерных волка».</summary>
+        public string NameFew { get; set; } = "";
+        /// <summary>Форма для 5 и больше: «5 гоблинов».</summary>
         public string NamePlural { get; set; } = "";
+
+        /// <summary>«1 гоблин», «3 гоблина», «5 гоблинов», «11 гоблинов», «21 гоблин».</summary>
+        public string CountText(int n)
+        {
+            int last2 = n % 100, last = n % 10;
+            string form = last2 >= 11 && last2 <= 14 ? NamePlural
+                : last == 1 ? Name.ToLowerInvariant()
+                : last >= 2 && last <= 4 ? NameFew
+                : NamePlural;
+            return $"{n} {form}";
+        }
         public int Hp { get; set; }
         public int Attack { get; set; }
         /// <summary>За сколько тиков монстр переходит в соседнюю зону.</summary>
@@ -33,6 +46,8 @@ namespace HeroMaster.Core.Battle
             foreach (var m in Monsters)
             {
                 if (!ids.Add(m.Id)) errors.Add($"Повторяется id монстра «{m.Id}».");
+                if (string.IsNullOrWhiteSpace(m.NameFew) || string.IsNullOrWhiteSpace(m.NamePlural))
+                    errors.Add($"Монстр «{m.Id}»: нужны формы nameFew (3 гоблина) и namePlural (5 гоблинов).");
                 if (m.Hp < 1 || m.Attack < 0 || m.MoveTicks < 1 || m.Loot < 0)
                     errors.Add($"Монстр «{m.Id}»: hp ≥ 1, attack ≥ 0, moveTicks ≥ 1, loot ≥ 0.");
             }

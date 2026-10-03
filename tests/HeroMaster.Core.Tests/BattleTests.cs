@@ -51,6 +51,18 @@ public class BattleTests
     }
 
     [Fact]
+    public void Monster_counts_read_naturally_in_russian()
+    {
+        var goblin = Rules().Monsters.Get("goblin");
+        Assert.Equal("1 гоблин", goblin.CountText(1));
+        Assert.Equal("3 гоблина", goblin.CountText(3));
+        Assert.Equal("5 гоблинов", goblin.CountText(5));
+        Assert.Equal("12 гоблинов", goblin.CountText(12));
+        Assert.Equal("21 гоблин", goblin.CountText(21));
+        Assert.Equal("2 пещерных волка", Rules().Monsters.Get("wolf").CountText(2));
+    }
+
+    [Fact]
     public void Same_seed_gives_the_same_battle()
     {
         string Run()

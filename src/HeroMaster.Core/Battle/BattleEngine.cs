@@ -107,7 +107,7 @@ namespace HeroMaster.Core.Battle
                             AttackCooldown = 1
                         });
                     }
-                    parts.Add($"{spawn.Count} {MonsterOf(s, spawn.Monster).NamePlural} — «{s.Mission.Zone(spawn.Zone).Name}»");
+                    parts.Add($"{MonsterOf(s, spawn.Monster).CountText(spawn.Count)} — «{s.Mission.Zone(spawn.Zone).Name}»");
                 }
                 s.Say("wave", $"Волна {s.WavesSpawned} из {waves.Count}: {string.Join("; ", parts)}.", 5, -1);
             }

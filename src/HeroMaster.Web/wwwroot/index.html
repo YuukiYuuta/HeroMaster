@@ -60,6 +60,40 @@
     </section>
   </main>
 
+  <section id="battle" class="battle" hidden>
+    <div class="panel battle-head">
+      <div class="battle-title">
+        <h2 id="bTitle"></h2>
+        <p class="hint" id="bDesc"></p>
+      </div>
+      <div class="battle-stats" id="bStats"></div>
+      <div class="battle-controls">
+        <button id="bPlay" class="primary">Пауза</button>
+        <span class="speeds">
+          <button class="secondary small" data-speed="1">×1</button>
+          <button class="secondary small" data-speed="2">×2</button>
+          <button class="secondary small" data-speed="4">×4</button>
+          <button class="secondary small" data-speed="8">×8</button>
+        </span>
+        <button id="bSkip" class="secondary">До конца</button>
+      </div>
+    </div>
+    <div id="bResults" class="panel results" hidden></div>
+    <div class="battle-body">
+      <div class="panel map-panel">
+        <div id="bMap" class="map"></div>
+        <p class="hint legend">Узкий проход — враги не могут навалиться толпой. Укрытие снижает урон. Красные зоны — откуда идут волны.</p>
+      </div>
+      <div class="panel feed-panel">
+        <div class="panel-head">
+          <h2>Ход боя</h2>
+          <label class="check"><input type="checkbox" id="bHideKills"> Скрыть удары</label>
+        </div>
+        <div id="bFeed" class="feed"></div>
+      </div>
+    </div>
+  </section>
+
   <div id="start" class="start" hidden>
     <div class="panel">
       <h2>Партия не начата</h2>

@@ -1,8 +1,8 @@
 {
   "monsters": [
-    { "id": "rat", "name": "Крыса-переросток", "namePlural": "крыс-переростков", "hp": 10, "attack": 2, "moveTicks": 3, "loot": 1 },
-    { "id": "goblin", "name": "Гоблин", "namePlural": "гоблинов", "hp": 18, "attack": 4, "moveTicks": 4, "loot": 3 },
-    { "id": "wolf", "name": "Пещерный волк", "namePlural": "пещерных волков", "hp": 26, "attack": 6, "moveTicks": 3, "loot": 4 },
-    { "id": "brute", "name": "Громила", "namePlural": "громил", "hp": 70, "attack": 10, "moveTicks": 6, "loot": 10 }
+    { "id": "rat", "name": "Крыса-переросток", "nameFew": "крысы-переростка", "namePlural": "крыс-переростков", "hp": 10, "attack": 2, "moveTicks": 3, "loot": 1 },
+    { "id": "goblin", "name": "Гоблин", "nameFew": "гоблина", "namePlural": "гоблинов", "hp": 18, "attack": 4, "moveTicks": 4, "loot": 3 },
+    { "id": "wolf", "name": "Пещерный волк", "nameFew": "пещерных волка", "namePlural": "пещерных волков", "hp": 26, "attack": 6, "moveTicks": 3, "loot": 4 },
+    { "id": "brute", "name": "Громила", "nameFew": "громилы", "namePlural": "громил", "hp": 70, "attack": 10, "moveTicks": 6, "loot": 10 }
   ]
 }
