@@ -87,6 +87,18 @@ public sealed class GameSession
         }
     }
 
+    /// <summary>Совет мастера в бою: держать позицию. heroId = null — всему отряду.</summary>
+    public (List<string> errors, object? snapshot) Advise(string zoneId, string? heroId, int feedFrom)
+    {
+        lock (_lock)
+        {
+            if (_world == null || _day?.Battle == null)
+                return (new List<string> { "Сейчас нет боя." }, null);
+            var errors = MasterAdvice.Give(_world, _rules, _day.Battle, zoneId, string.IsNullOrEmpty(heroId) ? null : heroId);
+            return (errors, errors.Count > 0 ? null : BattleSnapshot(_day.Battle, feedFrom));
+        }
+    }
+
     /// <summary>Возвращает (ошибки, состояние) после итогов боя, жизни на базе и ночи.</summary>
     public (List<string> errors, object? state) FinishDay()
     {
@@ -131,6 +143,7 @@ public sealed class GameSession
             {
                 h.Hero.Id,
                 h.Hero.Name,
+                h.Hero.NameGenitive,
                 role = h.Hero.CombatRole,
                 h.Zone,
                 h.TargetZone,
@@ -175,6 +188,17 @@ public sealed class GameSession
                 h.Experience,
                 h.Purse,
                 power = Combat.Power(_rules, h),
+                sense = Positioning.Sense(_rules, h),
+                techniques = h.Techniques.Where(t => t.Strength > 0).OrderByDescending(t => t.Strength).Select(t => new
+                {
+                    t.Action,
+                    name = Techniques.Describe(t.Action),
+                    t.Strength,
+                    learned = t.Strength >= _rules.Config.Learning.LearnedThreshold,
+                    t.Successes,
+                    t.Failures,
+                    from = t.LearnedFrom == Ids.Master ? "мастер" : _world.Heroes.FirstOrDefault(o => o.Id == t.LearnedFrom)?.Name ?? ""
+                }),
                 master = new { toMaster.Trust, toMaster.Respect, toMaster.Affection, toMaster.Fear },
                 relations = _world.Heroes.Where(o => o.Id != id).Select(o =>
                 {

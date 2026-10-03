@@ -219,6 +219,25 @@ main {
 .chip.moving .nm::after { content: " →"; color: var(--muted); font-weight: 400; }
 .cd.bad { color: var(--bad); }
 
+.advice-hint { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.advice-hint b { color: var(--ink); }
+.zone .go {
+  margin-top: 5px;
+  width: 100%;
+  padding: 3px 6px;
+  font-size: 11.5px;
+  border-radius: 6px;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
+}
+.zone .go:hover { background: var(--accent); color: var(--accent-ink); }
+.chip { cursor: pointer; border-radius: 4px; padding: 1px 2px; }
+.chip.selected { outline: 2px solid var(--accent); }
+.tech { display: grid; grid-template-columns: 1fr 120px 34px; gap: 8px; align-items: center; font-size: 13px; margin: 3px 0; }
+.tech .bar-track { height: 7px; }
+.tech .learned { color: var(--good); font-weight: 600; }
+
 .feed-panel { position: sticky; top: 76px; }
 .feed { max-height: 62vh; overflow: auto; font-size: 13px; }
 .feed .event .tick { color: var(--muted); font-size: 11px; margin-right: 6px; }

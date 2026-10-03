@@ -56,7 +56,30 @@ namespace HeroMaster.Core.Battle
             int confusion = excess * c.SpamFollowPenalty + (contradiction ? c.SpamFollowPenalty : 0);
             foreach (var t in targets)
                 Respond(world, rules, s, t, zone, confusion);
+
+            if (heroId == null)
+                FollowTheCrowd(rules, s, zone);
             return errors;
+        }
+
+        /// <summary>
+        /// Стадный инстинкт после совета всем: кто пропустил совет мимо ушей, но видит, что большинство уходит,
+        /// скорее пойдёт следом, чем останется без своих. Бойкотирующий и отказавшийся драться — не идут.
+        /// </summary>
+        private static void FollowTheCrowd(GameRules rules, BattleState s, ZoneDefinition zone)
+        {
+            var fighters = s.Heroes.Where(h => h.Alive && h.Conduct != Conduct.Abandoned && h.Conduct != Conduct.Passive).ToList();
+            foreach (var h in fighters.Where(h => h.TargetZone != zone.Id))
+            {
+                int going = fighters.Count(o => o != h && o.TargetZone == zone.Id);
+                int staying = fighters.Count(o => o != h && o.TargetZone == h.TargetZone);
+                if (going == 0 || going < staying)
+                    continue;
+                var hero = h.Hero;
+                h.TargetZone = zone.Id;
+                h.MoveCooldown = rules.Config.Battle.HeroMoveTicks;
+                s.Say("advice_crowd", $"{hero.Name} не {hero.G("горел", "горела")} желанием, но {hero.G("пошёл", "пошла")} за остальными: без своих страшнее.", 3, 0, hero.Id);
+            }
         }
 
         private static void Respond(GameWorld world, GameRules rules, BattleState s, BattleHero bh, ZoneDefinition zone, int confusion)

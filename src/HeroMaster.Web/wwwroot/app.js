@@ -261,12 +261,13 @@ const CONDUCT = {
 };
 const ROLE = { melee: "", ranged: "стрелок", healer: "лекарь" };
 
-const battle = { snap: null, feedCount: 0, playing: true, speed: 1, busy: false, timer: null };
+const battle = { snap: null, feedCount: 0, playing: true, speed: 1, busy: false, timer: null, selectedHero: null };
 
 function enterBattle(snap) {
   battle.snap = null;
   battle.feedCount = 0;
   battle.playing = true;
+  battle.selectedHero = null;
   $("bFeed").innerHTML = "";
   $("bResults").hidden = true;
   $("app").hidden = true;
@@ -308,11 +309,58 @@ function applySnapshot(snap) {
     `<span>Волна ${snap.wavesSpawned} из ${snap.totalWaves}</span><span class="muted">${wave}</span>` +
     `<span>Убито врагов: ${snap.monstersKilled}</span><span>Добыча: ${snap.loot}</span><span>В строю: ${alive}/${snap.heroes.length}</span>`;
   renderMap(snap);
+  updateAdviceHint();
   updatePlayButton();
   if (snap.outcome !== "running") showResults(snap);
 }
 
+function updateAdviceHint() {
+  const snap = battle.snap;
+  if (!snap || snap.outcome !== "running") {
+    $("bAdviceHint").textContent = "";
+    return;
+  }
+  const sel = snap.heroes.find((h) => h.id === battle.selectedHero && !h.dead);
+  if (!sel) battle.selectedHero = null;
+  $("bAdviceHint").innerHTML = sel
+    ? `Совет для <b>${escapeHtml(sel.nameGenitive || sel.name)}</b>: нажмите «Сюда» на нужной позиции. Нажмите на героя ещё раз, чтобы советовать всем.`
+    : "Совет всему отряду: нажмите «Сюда» на нужной позиции. Нажмите на героя, чтобы советовать только ему. Слишком частые советы путают героев.";
+}
+
+async function advise(zone) {
+  const { ok, data } = await api("/api/battle/advice", { zone, heroId: battle.selectedHero, feedFrom: battle.feedCount });
+  if (!ok) {
+    appendFeed((data.errors || ["Совет не прозвучал."]).map((t) => ({ tick: battle.snap.tick, kind: "error", text: t, importance: 5, emotion: -1 })));
+    return;
+  }
+  applySnapshot(data);
+}
+
+$("bMap").addEventListener("click", (e) => {
+  const go = e.target.closest("[data-advise]");
+  if (go) {
+    advise(go.dataset.advise);
+    return;
+  }
+  const chip = e.target.closest("[data-chip]");
+  if (chip && battle.snap && battle.snap.outcome === "running") {
+    battle.selectedHero = battle.selectedHero === chip.dataset.chip ? null : chip.dataset.chip;
+    renderMap(battle.snap);
+    updateAdviceHint();
+  }
+});
+
+// Пока кнопка мыши зажата над картой, не перерисовываем её — иначе нажатие на «Сюда!» потеряется.
+let mapPointerDown = false;
+$("bMap").addEventListener("pointerdown", () => (mapPointerDown = true));
+window.addEventListener("pointerup", () => {
+  if (!mapPointerDown) return;
+  mapPointerDown = false;
+  setTimeout(() => battle.snap && renderMap(battle.snap), 0);
+});
+
 function renderMap(snap) {
+  if (mapPointerDown) return;
   // Зоны прижаты к краям с запасом, чтобы рамки не вылезали за карту.
   const pos = (z) => ({ x: Math.min(86, Math.max(14, z.x)), y: Math.min(78, Math.max(9, z.y)) });
   const byId = Object.fromEntries(snap.mission.zones.map((z) => [z.id, z]));
@@ -343,8 +391,8 @@ function renderMap(snap) {
       const [label, bad] = CONDUCT[h.conduct] ?? [h.conduct, false];
       const hpPct = Math.max(0, Math.round((h.hp * 100) / h.maxHp));
       const role = ROLE[h.role] ? ` · ${ROLE[h.role]}` : "";
-      const chipCls = ["chip", h.dead ? "dead" : "", h.injured || hpPct < 35 ? "hurt" : "", h.zone !== h.targetZone ? "moving" : ""].join(" ");
-      return `<div class="${chipCls}" title="${escapeHtml(h.name)}: ${h.hp}/${h.maxHp}">
+      const chipCls = ["chip", h.dead ? "dead" : "", h.injured || hpPct < 35 ? "hurt" : "", h.zone !== h.targetZone ? "moving" : "", h.id === battle.selectedHero ? "selected" : ""].join(" ");
+      return `<div class="${chipCls}" data-chip="${h.dead ? "" : h.id}" title="${escapeHtml(h.name)}: ${h.hp}/${h.maxHp}">
           <span class="nm">${escapeHtml(h.name)}</span>
           <span class="cd ${bad ? "bad" : ""}">${h.dead ? "пал" : label}${role}</span>
           <div class="hp"><div style="width:${hpPct}%"></div></div>
@@ -355,6 +403,7 @@ function renderMap(snap) {
         <div class="zone-tags">${tags.join(" · ")}</div>
         ${mon ? `<div class="zone-monsters">${escapeHtml(mon)}</div>` : ""}
         <div class="zone-heroes">${chips}</div>
+        ${!z.spawn && snap.outcome === "running" ? `<button class="go" data-advise="${z.id}">Сюда!</button>` : ""}
       </div>`;
   }).join("");
 
@@ -470,6 +519,13 @@ async function openHero(id) {
     <p><b>Мечта:</b> ${escapeHtml(h.dream)}<br><b>Ценности:</b> ${h.values.map(escapeHtml).join("; ")}</p>
     <div class="detail-grid">${h.traits.map((t) => `<span>${TRAITS[t.id] ?? t.id}</span><b>${t.value}</b>`).join("")}</div>
     <p><b>К мастеру:</b> доверие ${h.master.trust}, уважение ${h.master.respect}, привязанность ${h.master.affection}, страх ${h.master.fear}</p>
+    <b>Приёмы</b> <span class="muted">(чутьё на позиции: ${h.sense}/100)</span>
+    ${h.techniques.length === 0
+      ? '<p class="muted">Пока ничему не научился. Удачные советы мастера в бою и разговоры с опытными товарищами учат — медленно.</p>'
+      : h.techniques.map((t) => `<div class="tech">
+          <span>${escapeHtml(t.name)}${t.learned ? ' <span class="learned">усвоено</span>' : ""}<br><span class="muted">удачно ${t.successes}, неудачно ${t.failures}${t.from ? `, научил: ${escapeHtml(t.from)}` : ""}</span></span>
+          <div class="bar-track"><div class="bar-fill" style="width:${t.strength}%;background:var(--resolve)"></div></div>
+          <span class="num">${t.strength}</span></div>`).join("")}
     <b>Отношения к остальным</b>
     <table class="rel"><tr><th>Кому</th><th>Доверие</th><th>Привяз.</th><th>Уважение</th><th>Соперн.</th></tr>${rel}</table>
     <b>Последние события</b>

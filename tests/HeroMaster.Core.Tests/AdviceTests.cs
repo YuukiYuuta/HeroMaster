@@ -52,6 +52,21 @@ public class AdviceTests
     }
 
     [Fact]
+    public void Those_who_ignored_advice_follow_the_crowd_rather_than_stay_alone()
+    {
+        var (world, rules, s) = StartBattle(trust: 80);
+        foreach (var h in s.Heroes) h.TargetZone = "square";
+        // Двое не доверяют мастеру — совет им не указ, но остаться вдвоём страшнее.
+        world.TowardMaster("gron").Trust = 0;
+        world.TowardMaster("pip").Trust = 0;
+
+        MasterAdvice.Give(world, rules, s, "chapel", null);
+
+        Assert.All(s.Heroes, h => Assert.Equal("chapel", h.TargetZone));
+        Assert.Contains(s.Feed, f => f.Kind == "advice_crowd");
+    }
+
+    [Fact]
     public void Hero_who_refuses_to_fight_goes_only_where_it_is_safer()
     {
         var (world, rules, s) = StartBattle(trust: 95);

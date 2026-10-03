@@ -34,6 +34,11 @@ app.MapPost("/api/day/begin", (GameSession game, MasterDecisions decisions) =>
 });
 app.MapPost("/api/battle/step", (GameSession game, StepRequest request) =>
     game.StepBattle(request.Ticks, request.FeedFrom) is { } snapshot ? Results.Ok(snapshot) : Results.NotFound());
+app.MapPost("/api/battle/advice", (GameSession game, AdviceRequest request) =>
+{
+    var (errors, snapshot) = game.Advise(request.Zone, request.HeroId, request.FeedFrom);
+    return errors.Count > 0 ? Results.BadRequest(new { errors }) : Results.Ok(snapshot);
+});
 app.MapPost("/api/day/finish", (GameSession game) =>
 {
     var (errors, state) = game.FinishDay();
@@ -55,3 +60,4 @@ static string FindProjectRoot(string start)
 
 record NewGameRequest(ulong? Seed);
 record StepRequest(int Ticks, int FeedFrom);
+record AdviceRequest(string Zone, string? HeroId, int FeedFrom);
