@@ -21,6 +21,8 @@ namespace HeroMaster.Core.World
         public Pcg32 Rng { get; set; } = new();
         public MasterState Master { get; set; } = new();
         public List<Hero> Heroes { get; set; } = new();
+        /// <summary>Павшие герои. Смерть окончательна — они больше не в отряде, но о них помнят.</summary>
+        public List<FallenHero> Fallen { get; set; } = new();
         public List<Relationship> Relationships { get; set; } = new();
         public EventLog Log { get; set; } = new();
 
@@ -46,6 +48,17 @@ namespace HeroMaster.Core.World
         public int Gold { get; set; }
         /// <summary>Добыча последней вылазки, которую мастер ещё не поделил. null — делить нечего.</summary>
         public LootPool? PendingLoot { get; set; }
+    }
+
+    public sealed class FallenHero
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public int Stars { get; set; }
+        public string Profession { get; set; } = "";
+        public int Day { get; set; }
+        public string Where { get; set; } = "";
+        public string KilledBy { get; set; } = "";
     }
 
     public sealed class LootPool

@@ -37,6 +37,7 @@ namespace HeroMaster.Core.World
                     Stars = def.Stars,
                     MaxStars = def.MaxStars,
                     Profession = def.Profession,
+                    CombatRole = def.CombatRole,
                     Bio = def.Bio,
                     Dream = def.Dream,
                     Traits = def.Traits.Clone(),

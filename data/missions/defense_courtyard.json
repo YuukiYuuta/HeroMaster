@@ -1,0 +1,24 @@
+{
+  "id": "defense_courtyard",
+  "name": "Оборона: заброшенный двор",
+  "description": "Отряд высаживают посреди старого двора. Скоро из ворот и пролома полезут монстры. Нужно продержаться пять волн.",
+  "startZone": "square",
+
+  "zones": [
+    { "id": "north_gate", "name": "Северные ворота", "x": 50, "y": 8,  "width": 4, "cover": 0,  "spawn": true, "links": [ "square" ] },
+    { "id": "breach",     "name": "Пролом в стене",  "x": 90, "y": 35, "width": 3, "cover": 0,  "spawn": true, "links": [ "square" ] },
+    { "id": "square",     "name": "Площадь",         "x": 50, "y": 45, "width": 6, "cover": 0,  "links": [ "north_gate", "breach", "alley", "ruins", "well" ] },
+    { "id": "alley",      "name": "Узкий переулок",  "x": 14, "y": 45, "width": 2, "cover": 10, "links": [ "square", "chapel" ] },
+    { "id": "chapel",     "name": "Часовня",         "x": 14, "y": 86, "width": 2, "cover": 35, "links": [ "alley" ] },
+    { "id": "ruins",      "name": "Руины стены",     "x": 86, "y": 82, "width": 3, "cover": 25, "links": [ "square" ] },
+    { "id": "well",       "name": "Колодец",         "x": 50, "y": 84, "width": 5, "cover": 5,  "links": [ "square" ] }
+  ],
+
+  "waves": [
+    { "atTick": 25,  "spawns": [ { "monster": "rat", "count": 4, "zone": "north_gate" } ] },
+    { "atTick": 70,  "spawns": [ { "monster": "goblin", "count": 3, "zone": "north_gate" }, { "monster": "rat", "count": 2, "zone": "breach" } ] },
+    { "atTick": 120, "spawns": [ { "monster": "goblin", "count": 4, "zone": "breach" } ] },
+    { "atTick": 170, "spawns": [ { "monster": "wolf", "count": 2, "zone": "north_gate" }, { "monster": "goblin", "count": 3, "zone": "breach" } ] },
+    { "atTick": 230, "spawns": [ { "monster": "brute", "count": 1, "zone": "north_gate" }, { "monster": "wolf", "count": 2, "zone": "breach" }, { "monster": "goblin", "count": 2, "zone": "north_gate" } ] }
+  ]
+}

@@ -20,9 +20,7 @@ public sealed class GameSession
     public GameSession(string dataDir, string savePath)
     {
         _savePath = savePath;
-        _rules = new GameRules(
-            GameJson.LoadCatalog(Path.Combine(dataDir, "heroes.json")),
-            GameJson.LoadConfig(Path.Combine(dataDir, "balance.json")));
+        _rules = GameJson.LoadRules(dataDir);
 
         if (File.Exists(savePath))
         {

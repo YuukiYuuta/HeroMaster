@@ -41,6 +41,14 @@ namespace HeroMaster.Core.Model
         Female
     }
 
+    /// <summary>Как герой сражается: врукопашную, издалека (бьёт и по соседней зоне) или лечит своих.</summary>
+    public enum CombatRole
+    {
+        Melee,
+        Ranged,
+        Healer
+    }
+
     /// <summary>Отношение героя к мастеру, от которого зависит послушание.</summary>
     public enum MoodStatus
     {
@@ -118,6 +126,7 @@ namespace HeroMaster.Core.Model
         public int MaxStars { get; set; } = 1;
         /// <summary>Профессия меняется вместе со звёздностью (деревенский парень → кузнец → …).</summary>
         public string Profession { get; set; } = "";
+        public CombatRole CombatRole { get; set; }
         public string Bio { get; set; } = "";
         public string Dream { get; set; } = "";
         public Traits Traits { get; set; } = new();

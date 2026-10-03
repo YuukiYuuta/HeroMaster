@@ -45,6 +45,33 @@ namespace HeroMaster.Core.Persistence
             return config;
         }
 
+        /// <summary>
+        /// Загружает все правила из папки data: heroes.json, balance.json, monsters.json и missions/*.json.
+        /// Любая ошибка в данных — понятное сообщение со списком проблем.
+        /// </summary>
+        public static Simulation.GameRules LoadRules(string dataDir)
+        {
+            var catalog = LoadCatalog(Path.Combine(dataDir, "heroes.json"));
+            var config = LoadConfig(Path.Combine(dataDir, "balance.json"));
+
+            var monstersPath = Path.Combine(dataDir, "monsters.json");
+            var monsters = Deserialize<Battle.MonsterCatalog>(File.ReadAllText(monstersPath, Encoding.UTF8));
+            ThrowIfInvalid(monstersPath, monsters.Validate());
+
+            var missions = new System.Collections.Generic.List<Battle.MissionDefinition>();
+            foreach (var path in Directory.GetFiles(Path.Combine(dataDir, "missions"), "*.json").OrderBy(p => p, StringComparer.Ordinal))
+            {
+                var mission = Deserialize<Battle.MissionDefinition>(File.ReadAllText(path, Encoding.UTF8));
+                ThrowIfInvalid(path, mission.Validate(monsters));
+                missions.Add(mission);
+            }
+
+            var rules = new Simulation.GameRules(catalog, config, monsters, missions);
+            if (missions.All(m => m.Id != config.Expedition.MissionId))
+                throw new InvalidDataException($"В balance.json указана миссия «{config.Expedition.MissionId}», но такой нет в data/missions.");
+            return rules;
+        }
+
         public static void SaveWorld(GameWorld world, string path)
         {
             var dir = Path.GetDirectoryName(Path.GetFullPath(path));

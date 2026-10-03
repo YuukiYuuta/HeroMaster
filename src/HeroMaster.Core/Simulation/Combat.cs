@@ -42,15 +42,12 @@ namespace HeroMaster.Core.Simulation
         /// Боевая сила: звёзды + опыт (не больше потолка для звёздности), минус усталость и раны.
         /// Именно она решает исход, а не рвение.
         /// </summary>
-        /// <param name="injured">Ранен в этой вылазке — до её конца дерётся слабее. На базе раны заживают полностью.</param>
-        public static int Power(GameRules rules, Hero hero, bool injured = false)
+        public static int Power(GameRules rules, Hero hero)
         {
             var c = rules.Config.Combat;
             int fromExperience = System.Math.Min(hero.Experience / c.ExperiencePerPower, hero.Stars * c.ExperienceCapPerStar);
             int power = hero.Stars * c.PowerPerStar + fromExperience;
             power -= power * hero.State.Fatigue * c.FatiguePowerLossPercent / 10000;
-            if (injured)
-                power = power * c.InjuredPowerPercent / 100;
             return System.Math.Max(1, power);
         }
 
@@ -68,8 +65,8 @@ namespace HeroMaster.Core.Simulation
             }
         }
 
-        public static int EffectivePower(GameRules rules, Hero hero, Conduct conduct, bool injured = false) =>
-            Power(rules, hero, injured) * EffortPercent(rules, conduct) / 100;
+        public static int EffectivePower(GameRules rules, Hero hero, Conduct conduct) =>
+            Power(rules, hero) * EffortPercent(rules, conduct) / 100;
 
         public static bool IsFighting(Conduct conduct) => conduct != Conduct.Passive && conduct != Conduct.Abandoned;
 

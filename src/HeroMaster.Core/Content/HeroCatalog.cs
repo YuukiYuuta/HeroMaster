@@ -108,6 +108,7 @@ namespace HeroMaster.Core.Content
         public int Stars { get; set; } = 1;
         public int MaxStars { get; set; } = 1;
         public string Profession { get; set; } = "";
+        public CombatRole CombatRole { get; set; }
         public string Bio { get; set; } = "";
         public string Dream { get; set; } = "";
         public Traits Traits { get; set; } = new();

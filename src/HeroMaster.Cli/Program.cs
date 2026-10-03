@@ -66,9 +66,7 @@ catch (Exception ex)
     return 1;
 }
 
-GameRules LoadRules() => new GameRules(
-    GameJson.LoadCatalog(Path.Combine(dataDir, "heroes.json")),
-    GameJson.LoadConfig(Path.Combine(dataDir, "balance.json")));
+GameRules LoadRules() => GameJson.LoadRules(dataDir);
 
 void Play(GameWorld world, GameRules rules)
 {

@@ -20,6 +20,7 @@ namespace HeroMaster.Core.Config
         public ObedienceConfig Obedience { get; set; } = new();
         public CombatConfig Combat { get; set; } = new();
         public ExpeditionConfig Expedition { get; set; } = new();
+        public BattleConfig Battle { get; set; } = new();
         public LootConfig Loot { get; set; } = new();
         public GiftConfig Gifts { get; set; } = new();
         public ActivityConfig Activities { get; set; } = new();
@@ -80,12 +81,14 @@ namespace HeroMaster.Core.Config
             if (!(Obedience.EnthusiasticFrom > Obedience.CompliesFrom && Obedience.CompliesFrom > Obedience.GrudgingFrom))
                 errors.Add("obedience: пороги должны убывать: enthusiasticFrom > compliesFrom > grudgingFrom.");
 
-            if (Expedition.EnemyPowerMin < 0 || Expedition.EnemyPowerMax < Expedition.EnemyPowerMin)
-                errors.Add("expedition: диапазон силы монстров задан неверно.");
-            if (Expedition.Encounters < 1 || Expedition.AttacksPerEncounter < 1)
-                errors.Add("expedition: нужна хотя бы одна стычка и одна атака.");
-            if (Expedition.LootPerHundredPower < 0 || Expedition.LootJitterPercent < 0 || Expedition.LootJitterPercent > 100)
-                errors.Add("expedition: добыча задана неверно.");
+            if (Battle.HeroAttackTicks < 1 || Battle.MonsterAttackTicks < 1 || Battle.HeroMoveTicks < 1)
+                errors.Add("battle: тики атаки и движения должны быть ≥ 1.");
+            if (Battle.DamageJitterPercent < 0 || Battle.DamageJitterPercent > 90)
+                errors.Add("battle.damageJitterPercent: 0–90.");
+            if (Battle.InjuredBelowPercent < 1 || Battle.InjuredBelowPercent > 99)
+                errors.Add("battle.injuredBelowPercent: 1–99.");
+            if (Battle.MaxTicks < 10)
+                errors.Add("battle.maxTicks: не меньше 10.");
             if (Combat.PowerPerStar < 1 || Combat.ExperiencePerPower < 1)
                 errors.Add("combat: powerPerStar и experiencePerPower должны быть ≥ 1.");
             if (Expedition.MinMembers < 1 || Expedition.MinMembers > Team.MaxSize)
@@ -230,8 +233,6 @@ namespace HeroMaster.Core.Config
         public int ExperienceCapPerStar { get; set; } = 10;
         /// <summary>Усталость 100 снижает силу на столько процентов.</summary>
         public int FatiguePowerLossPercent { get; set; } = 40;
-        /// <summary>Раненый дерётся на столько процентов своей силы.</summary>
-        public int InjuredPowerPercent { get; set; } = 50;
 
         public int AllInEffortPercent { get; set; } = 110;
         public int HalfHeartedEffortPercent { get; set; } = 90;
@@ -246,39 +247,87 @@ namespace HeroMaster.Core.Config
         public int PanicCourageBelow { get; set; } = 30;
     }
 
-    /// <summary>Упрощённая вылазка из нескольких стычек (до появления настоящего боя в группе 3).</summary>
+    /// <summary>Последствия вылазки для героев (сам бой — в <see cref="BattleConfig"/>).</summary>
     public sealed class ExpeditionConfig
     {
         public int MinMembers { get; set; } = 3;
-        public int Encounters { get; set; } = 3;
-        public int AttacksPerEncounter { get; set; } = 2;
-        /// <summary>Сила одной атаки монстров.</summary>
-        public int EnemyPowerMin { get; set; } = 15;
-        public int EnemyPowerMax { get; set; } = 35;
-        /// <summary>Добыча за стычку: столько золота на каждые 100 единиц общей силы отряда.</summary>
-        public int LootPerHundredPower { get; set; } = 15;
-        public int LootJitterPercent { get; set; } = 20;
+        public string MissionId { get; set; } = "defense_courtyard";
         public int FatigueGain { get; set; } = 35;
         /// <summary>Максимальный прирост стресса — у самого трусливого; у смелых меньше.</summary>
         public int StressGainMax { get; set; } = 20;
-        /// <summary>Базовый шанс ранения для героя, на которого напали.</summary>
-        public int InjuryChancePercent { get; set; } = 2;
-        /// <summary>Сколько процентов от разницы «сила монстра − сила героя» добавляется к шансу ранения.</summary>
-        public int InjuryPowerGapPercent { get; set; } = 25;
-        /// <summary>Сколько процентов шанса ранения добавляет каждые 10 пунктов усталости.</summary>
-        public int InjuryChancePerTenFatigue { get; set; } = 2;
-        /// <summary>Стресс от тяжёлого ранения: тело на базе заживёт, а пережитое останется.</summary>
+        /// <summary>Стресс от ранения: тело на базе заживёт, а пережитое останется.</summary>
         public int InjuryStress { get; set; } = 15;
-        public int ExperienceGain { get; set; } = 12;
+        /// <summary>Опыт за участие в бою (сражался хотя бы ради самозащиты — половина).</summary>
+        public int ExperienceGain { get; set; } = 10;
+        /// <summary>Дополнительный опыт за каждого убитого врага.</summary>
+        public int KillExperience { get; set; } = 3;
         public int SuccessTrustGain { get; set; } = 1;
         public int InjuredTrustLoss { get; set; } = 5;
         /// <summary>Усталость, начиная с которой отправка на вылазку воспринимается как неуважение.</summary>
         public int SentTiredThreshold { get; set; } = 60;
         public int SentTiredTrustLoss { get; set; } = 4;
-        /// <summary>На сколько % растёт риск ранения остальных за каждого, кто отказался драться.</summary>
-        public int RefuseDangerPercent { get; set; } = 5;
-        /// <summary>То же за каждого бойкотирующего: он бросает позицию и подставляет команду.</summary>
-        public int BoycottDangerPercent { get; set; } = 15;
+        /// <summary>Гибель товарища: стресс каждому, плюс сверху — по привязанности к павшему.</summary>
+        public int DeathGriefStress { get; set; } = 15;
+        public int DeathGriefAffectionPercent { get; set; } = 30;
+        /// <summary>Друзья павшего (привязанность ≥ порога) винят мастера.</summary>
+        public int DeathBlameAffection { get; set; } = 55;
+        public int DeathBlameTrustLoss { get; set; } = 8;
+    }
+
+    /// <summary>
+    /// Бой в реальном времени, по тикам. Тик — короткий отрезок времени; герои и монстры
+    /// перемещаются между зонами карты и бьют друг друга с перезарядкой.
+    /// </summary>
+    public sealed class BattleConfig
+    {
+        public int MaxTicks { get; set; } = 600;
+        /// <summary>Здоровье героя = база + боевая сила.</summary>
+        public int HeroBaseHp { get; set; } = 50;
+        /// <summary>Урон героя за удар = сила × рвение × этот процент.</summary>
+        public int HeroDamagePercent { get; set; } = 25;
+        public int HeroAttackTicks { get; set; } = 2;
+        public int MonsterAttackTicks { get; set; } = 2;
+        public int HeroMoveTicks { get; set; } = 4;
+        public int DamageJitterPercent { get; set; } = 25;
+        /// <summary>Ниже этой доли здоровья герой считается раненым.</summary>
+        public int InjuredBelowPercent { get; set; } = 35;
+
+        /// <summary>Монстр чаще бьёт тех, кто стоит в первом ряду (рукопашных бойцов).</summary>
+        public int FrontlineTargetWeight { get; set; } = 3;
+
+        public int HealAmount { get; set; } = 6;
+        public int HealTicks { get; set; } = 3;
+        /// <summary>Лекарь лечит союзника, если у того меньше этой доли здоровья.</summary>
+        public int HealBelowPercent { get; set; } = 75;
+        public int HealerAttackPercent { get; set; } = 60;
+
+        // Выбор позиции. Чутьё = звёзды × SensePerStar + опыт / SenseExperienceDivisor + дисциплина / SenseDisciplineDivisor.
+        public int SensePerStar { get; set; } = 15;
+        public int SenseExperienceDivisor { get; set; } = 3;
+        public int SenseDisciplineDivisor { get; set; } = 5;
+        /// <summary>Настоящая ценность зоны: укрытие, узость прохода, удалённость от врагов.</summary>
+        public int ValuePerCover { get; set; } = 2;
+        public int ValuePerNarrowness { get; set; } = 8;
+        public int ValuePerDistance { get; set; } = 6;
+        /// <summary>Новичку проще остаться там, где высадили.</summary>
+        public int StayBonus { get; set; } = 20;
+        /// <summary>Смелые тянутся вперёд: бонус за близость к врагам при смелости выше 50.</summary>
+        public int BraveFrontPercent { get; set; } = 30;
+        /// <summary>Трусы ценят укрытие сверх меры.</summary>
+        public int CowardCoverBonusPercent { get; set; } = 100;
+        public int CowardCourageBelow { get; set; } = 40;
+        /// <summary>Стадный инстинкт: за каждого товарища, уже выбравшего зону (масштабируется эмпатией).</summary>
+        public int CohesionBonus { get; set; } = 40;
+        /// <summary>Ошибка чутья новичка: ±(100 − чутьё) / этот делитель.</summary>
+        public int SenseBlurDivisor { get; set; } = 3;
+        /// <summary>Одиночка под ударом с здоровьем ниже этой доли отступает к своим.</summary>
+        public int RegroupBelowPercent { get; set; } = 60;
+        /// <summary>Передышка: когда рядом нет врагов, герой понемногу приходит в себя (здоровье за тик, но не выше доли).</summary>
+        public int BreatherHpPerTick { get; set; } = 1;
+        public int BreatherMaxPercent { get; set; } = 80;
+        /// <summary>Держаться рядом с теми, кому доверяешь и кого любишь.</summary>
+        public int FriendZoneBonus { get; set; } = 15;
+        public int FriendAffectionThreshold { get; set; } = 55;
     }
 
     public sealed class LootConfig
