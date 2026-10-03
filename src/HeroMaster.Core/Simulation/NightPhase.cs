@@ -25,6 +25,7 @@ namespace HeroMaster.Core.Simulation
                 s.Stress = GameWorld.Clamp(s.Stress - a.NightStressRecovery);
 
                 GrowResolve(world, rules, hero);
+                Battle.Techniques.Decay(world, rules, hero);
                 UpdateStatus(world, rules, hero);
             }
 

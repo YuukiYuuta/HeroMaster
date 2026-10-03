@@ -201,10 +201,14 @@
   },
 
   "advice": {
-    "spamWindowTurns": 3,
+    "spamWindowTicks": 20,
     "maxAdviceInWindow": 2,
-    "spamTrustPenalty": 3,
-    "contradictionTrustPenalty": 4,
+    "spamTrustPenalty": 2,
+    "contradictionTrustPenalty": 3,
+    "spamFollowPenalty": 15,
+    "followThreshold": 35,
+    "followJitter": 15,
+    "disagreeMargin": 25,
     "successTrustGain": 2,
     "failureTrustLoss": 3
   },
@@ -214,7 +218,11 @@
     "strengthLossPerFailure": 10,
     "learnedThreshold": 60,
     "decayPerIdleDay": 1,
+    "techniqueValuePercent": 60,
+    "practiceStrength": 2,
+    "teachChancePercent": 30,
     "teachingStrength": 8,
+    "respectedTeacherFrom": 65,
     "respectedTeacherBonusPercent": 50,
     "rivalRefusesTeachingAbove": 50
   }

@@ -29,6 +29,8 @@ namespace HeroMaster.Core.Battle
         public bool Injured { get; set; }
         public bool Dead { get; set; }
         public string KilledBy { get; set; } = "";
+        /// <summary>Зоны, куда герой пошёл по совету мастера (по порядку). Итог боя покажет, сработал ли совет.</summary>
+        public List<string> FollowedAdvice { get; } = new();
         public int Kills { get; set; }
         public int DamageDealt { get; set; }
         public int DamageTaken { get; set; }
@@ -50,6 +52,14 @@ namespace HeroMaster.Core.Battle
         public int AttackCooldown { get; set; }
         public bool Dead { get; set; }
         public bool Alive => !Dead;
+    }
+
+    public sealed class AdviceRecord
+    {
+        public int Tick { get; set; }
+        public string Zone { get; set; } = "";
+        /// <summary>Кому совет; null — всему отряду.</summary>
+        public string? HeroId { get; set; }
     }
 
     /// <summary>Строка ленты боя. Важные строки после боя попадают в общий журнал.</summary>
@@ -75,6 +85,8 @@ namespace HeroMaster.Core.Battle
         public int NextMonsterUid { get; set; } = 1;
         public int Loot { get; set; }
         public List<BattleFeedEntry> Feed { get; } = new();
+        /// <summary>Все советы мастера в этом бою — для проверки на спам и противоречия.</summary>
+        public List<AdviceRecord> Advice { get; } = new();
         public BattleOutcome Outcome { get; set; } = BattleOutcome.Running;
 
         public bool IsOver => Outcome != BattleOutcome.Running;

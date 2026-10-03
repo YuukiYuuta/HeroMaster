@@ -112,7 +112,7 @@ namespace HeroMaster.Core.Config
             if (Gifts.KindsById().Count != Gifts.Kinds.Count)
                 errors.Add("gifts.kinds: id подарков повторяются.");
 
-            if (Advice.SpamWindowTurns < 1 || Advice.MaxAdviceInWindow < 1)
+            if (Advice.SpamWindowTicks < 1 || Advice.MaxAdviceInWindow < 1)
                 errors.Add("advice: окно спама и лимит советов должны быть ≥ 1.");
 
             if (Learning.StrengthPerSuccess <= 0)
@@ -446,23 +446,49 @@ namespace HeroMaster.Core.Config
         public int NightStressRecovery { get; set; } = 5;
     }
 
+    /// <summary>
+    /// Советы мастера в бою. Давать их можно сколько угодно, но частые или противоречивые советы
+    /// путают героев: доверие падает, слушаются реже.
+    /// </summary>
     public sealed class AdviceConfig
     {
-        public int SpamWindowTurns { get; set; } = 3;
+        /// <summary>Окно, в котором считаются советы для проверки на спам, в тиках боя.</summary>
+        public int SpamWindowTicks { get; set; } = 20;
+        /// <summary>Сколько советов в окне — нормально; каждый сверх — спам.</summary>
         public int MaxAdviceInWindow { get; set; } = 2;
-        public int SpamTrustPenalty { get; set; } = 3;
-        public int ContradictionTrustPenalty { get; set; } = 4;
+        public int SpamTrustPenalty { get; set; } = 2;
+        /// <summary>Совет идти в другое место, чем предыдущий совет в том же окне.</summary>
+        public int ContradictionTrustPenalty { get; set; } = 3;
+        /// <summary>На сколько падает готовность слушаться за каждый совет сверх нормы.</summary>
+        public int SpamFollowPenalty { get; set; } = 15;
+        /// <summary>Готовность последовать совету: доверие + поправки ≥ порога.</summary>
+        public int FollowThreshold { get; set; } = 35;
+        public int FollowJitter { get; set; } = 15;
+        /// <summary>Опытный герой спорит, если его приёмы говорят, что текущее место лучше совета на столько.</summary>
+        public int DisagreeMargin { get; set; } = 25;
         public int SuccessTrustGain { get; set; } = 2;
         public int FailureTrustLoss { get; set; } = 3;
     }
 
+    /// <summary>
+    /// Обучение приёмам — медленное, как у людей: приём закрепляется после нескольких удачных
+    /// повторений, без практики слабеет; герои учат друг друга.
+    /// </summary>
     public sealed class LearningConfig
     {
         public int StrengthPerSuccess { get; set; } = 15;
         public int StrengthLossPerFailure { get; set; } = 10;
+        /// <summary>С этой силы приём считается усвоенным.</summary>
         public int LearnedThreshold { get; set; } = 60;
+        /// <summary>Сколько сила приёма теряет за ночь без практики.</summary>
         public int DecayPerIdleDay { get; set; } = 1;
+        /// <summary>Насколько сильный приём (100) повышает в глазах героя ценность подходящей зоны.</summary>
+        public int TechniqueValuePercent { get; set; } = 60;
+        /// <summary>Использование приёма в бою (позиция с нужным свойством) — небольшая практика.</summary>
+        public int PracticeStrength { get; set; } = 2;
+        public int TeachChancePercent { get; set; } = 30;
         public int TeachingStrength { get; set; } = 8;
+        public int RespectedTeacherFrom { get; set; } = 65;
         public int RespectedTeacherBonusPercent { get; set; } = 50;
         public int RivalRefusesTeachingAbove { get; set; } = 50;
     }

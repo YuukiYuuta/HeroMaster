@@ -61,6 +61,8 @@ namespace HeroMaster.Core.Battle
                 }
             }
 
+            LearnFromBattle(world, rules, s);
+
             foreach (var dead in s.Heroes.Where(h => h.Dead))
                 Bury(world, rules, s, dead);
 
@@ -71,6 +73,34 @@ namespace HeroMaster.Core.Battle
                 world.Master.PendingLoot = new LootPool { Amount = s.Loot, FromDay = day, Participants = survivors };
 
             return survivors;
+        }
+
+        /// <summary>
+        /// Сработал ли совет мастера? Если отряд выстоял, а последовавший совету цел — урок подтвердился,
+        /// доверие к мастеру растёт. Иначе урок под сомнением, доверие падает.
+        /// Кто стоял в позиции с уже знакомым приёмом — немного практикуется.
+        /// </summary>
+        private static void LearnFromBattle(GameWorld world, GameRules rules, BattleState s)
+        {
+            var a = rules.Config.Advice;
+            foreach (var bh in s.Heroes.Where(h => h.Alive))
+            {
+                var hero = bh.Hero;
+                if (bh.FollowedAdvice.Count > 0)
+                {
+                    var zone = s.Mission.Zone(bh.FollowedAdvice.Last());
+                    bool success = s.Outcome == BattleOutcome.Victory && !bh.Injured;
+                    TrustRules.Change(world, hero.Id, success ? a.SuccessTrustGain : -a.FailureTrustLoss);
+                    foreach (var lesson in Techniques.Features(s.Mission, zone))
+                        Techniques.Reinforce(world, rules, hero, lesson, success, Ids.Master);
+                    world.Log.Append(world.Day, DayPhase.Expedition, success ? "advice_worked" : "advice_failed",
+                        success
+                            ? $"{hero.Name}: совет мастера держаться позиции «{zone.Name}» себя оправдал."
+                            : $"{hero.Name}: совет мастера держаться позиции «{zone.Name}» не уберёг.",
+                        importance: success ? 4 : 5, emotion: success ? 1 : -2, actors: new[] { hero.Id, Ids.Master });
+                }
+                Techniques.Practice(world, rules, hero, Techniques.Features(s.Mission, s.Mission.Zone(bh.Zone)));
+            }
         }
 
         private static void Bury(GameWorld world, GameRules rules, BattleState s, BattleHero dead)

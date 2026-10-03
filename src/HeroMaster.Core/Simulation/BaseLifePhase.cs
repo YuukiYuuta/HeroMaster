@@ -235,6 +235,10 @@ namespace HeroMaster.Core.Simulation
                 hero.State.Stress = GameWorld.Clamp(hero.State.Stress - c.SocializeStressRecovery);
                 Log(world, day, DayPhase.BaseLife, "socialized",
                     $"{when} {hero.Name} {hero.G("провёл", "провела")} время с {partner.NameInstrumental}{hintNote}.", 2, 1, hero, Activity.Socialize, followedHint, partner.Id);
+
+                // За разговором опытный может поделиться приёмом.
+                if (!Battle.Techniques.TryTeach(world, rules, hero, partner))
+                    Battle.Techniques.TryTeach(world, rules, partner, hero);
             }
         }
 

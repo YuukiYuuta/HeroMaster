@@ -79,6 +79,8 @@ namespace HeroMaster.Core.Battle
                 int score = TrueValue(rules, mission, zone) * sense / 100;
                 if (blur > 0)
                     score += world.Rng.Range(-blur, blur);
+                // Усвоенные уроки: «в обороне держаться узкого прохода» и т. п.
+                score += Techniques.ZoneBonus(rules, hero, mission, zone);
                 if (zone.Id == mission.StartZone)
                     score += c.StayBonus * (100 - sense) / 100;
                 if (coward)
