@@ -13,6 +13,7 @@
       <span class="sub">прототип, этап 0</span>
     </div>
     <div class="stats" id="stats"></div>
+    <div class="narrator" id="narrator" title=""></div>
     <div class="actions">
       <label class="seed">Зерно <input id="seed" type="number" min="0" placeholder="случайно"></label>
       <button id="newGame" class="secondary">Новая партия</button>
@@ -22,6 +23,14 @@
   <main id="app">
     <section class="left">
       <div id="errors" class="errors" hidden></div>
+
+      <div class="panel" id="reportsPanel" hidden>
+        <div class="panel-head">
+          <h2>Донесения</h2>
+          <button id="olderReports" class="secondary small">Ранее</button>
+        </div>
+        <div id="reports"></div>
+      </div>
 
       <div class="panel" id="lootPanel" hidden>
         <h2>Добыча прошлой вылазки</h2>

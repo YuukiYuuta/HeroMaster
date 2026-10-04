@@ -18,7 +18,9 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 
 var dataDir = Path.Combine(AppContext.BaseDirectory, "data");
 var savePath = Path.Combine(FindProjectRoot(builder.Environment.ContentRootPath), "saves", "world.json");
-builder.Services.AddSingleton(new GameSession(dataDir, savePath));
+var narrator = new AiNarrator(builder.Configuration);
+var usage = new AiUsageLog(Path.Combine(Path.GetDirectoryName(savePath)!, "ai_usage.json"));
+builder.Services.AddSingleton(new GameSession(dataDir, savePath, narrator, usage));
 
 var app = builder.Build();
 app.UseDefaultFiles();

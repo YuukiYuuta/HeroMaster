@@ -264,3 +264,20 @@ dialog::backdrop { background: rgb(0 0 0 / .35); }
 .rel { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 12px; }
 .rel th, .rel td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
 .rel td.n { text-align: right; }
+
+/* ---------- Донесения, дневник, рассказчик ---------- */
+.narrator { font-size: 12px; padding: 3px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); cursor: help; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.narrator.on { color: var(--good); border-color: var(--good); }
+.narrator.busy { color: var(--warn); border-color: var(--warn); }
+.narrator.warn { color: var(--edge); border-color: var(--edge); }
+.src { font-size: 11px; padding: 0 6px; border-radius: 8px; border: 1px solid var(--line); color: var(--muted); font-weight: normal; vertical-align: middle; }
+.src.ai { color: var(--trust); border-color: var(--trust); }
+.report { border-left: 3px solid var(--line); padding: 4px 0 4px 10px; margin-bottom: 10px; }
+.report.battle { border-left-color: var(--accent); }
+.report p { margin: 4px 0; }
+.report-head { margin-bottom: 2px; }
+.diary-entry { border-left: 3px solid var(--line); padding: 2px 0 2px 10px; margin: 6px 0; }
+.diary-entry p { margin: 2px 0 0; font-style: italic; }
+.belief.neg .num { color: var(--bad); }
+.belief.pos .num { color: var(--good); }
+.more-row { margin: 4px 0 12px; }

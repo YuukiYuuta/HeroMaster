@@ -29,6 +29,8 @@ const TRAITS = {
 let state = null;
 let decisions = freshDecisions();
 let showingFullLog = false;
+let showingOlderReports = false;
+let narratorTimer = null;
 
 function freshDecisions() {
   return { team: new Set(), loot: {}, keepLoot: false, gifts: {}, hints: {} };
@@ -59,14 +61,76 @@ function render() {
   $("start").hidden = has;
   if (!has) {
     $("stats").innerHTML = "";
+    renderNarrator();
     return;
   }
   $("stats").innerHTML =
     `<span>День ${state.day}</span><span>Золото: ${state.gold}</span><span class="muted">зерно ${state.seed}</span>`;
+  renderReports();
+  renderNarrator();
   renderLoot();
   renderHeroes();
   if (!showingFullLog) renderJournal(state.lastDay, state.day === 0 ? "Начало партии" : `Журнал дня ${state.day}`);
   updateTeamInfo();
+}
+
+// ---------------- Донесения и рассказчик ----------------
+
+const SOURCE_BADGE = (source) => source === "ai"
+  ? '<span class="src ai" title="Текст написала языковая модель по фактам дня">ИИ</span>'
+  : '<span class="src" title="Текст собран по шаблонам — без языковой модели">шаблон</span>';
+
+function renderReports() {
+  const all = state.chronicle || [];
+  const latestDay = all.length ? all[0].day : null;
+  const shown = showingOlderReports ? all : all.filter((r) => r.day === latestDay);
+  $("reportsPanel").hidden = all.length === 0;
+  $("olderReports").hidden = all.length <= shown.length && !showingOlderReports;
+  $("olderReports").textContent = showingOlderReports ? "Только свежие" : "Ранее";
+  // Утренняя сводка — первой, отчёт о бое — следом.
+  const order = (r) => (r.kind === "morning" ? 0 : 1);
+  const sorted = [...shown].sort((a, b) => b.day - a.day || order(a) - order(b));
+  $("reports").innerHTML = sorted.map((r) => `
+    <div class="report ${r.kind}">
+      <div class="report-head"><b>${escapeHtml(r.title)}</b> ${SOURCE_BADGE(r.source)}</div>
+      ${r.text.split(/\n/).map((line) => `<p>${escapeHtml(line)}</p>`).join("")}
+    </div>`).join("");
+}
+
+function renderNarrator() {
+  const n = state && state.narrator;
+  if (!n) { $("narrator").innerHTML = ""; return; }
+  const u = n.usage;
+  const tokens = `${u.calls} вызов(ов), токены: ${u.inputTokens + u.cacheReadTokens + u.cacheWriteTokens} на входе, ${u.outputTokens} на выходе${u.failures ? `, сбоев: ${u.failures}` : ""}`;
+  let text, cls;
+  if (!n.enabled) {
+    text = "ИИ-рассказчик выключен — тексты по шаблонам";
+    cls = "off";
+    $("narrator").title = `Причина: ${n.reason}. ${tokens}`;
+  } else if (n.writing) {
+    text = "ИИ-рассказчик пишет тексты дня…";
+    cls = "busy";
+    $("narrator").title = `${n.model}. ${tokens}`;
+  } else {
+    text = `ИИ-рассказчик: ${n.model} · ${u.calls} выз. · ${u.inputTokens + u.cacheReadTokens + u.cacheWriteTokens + u.outputTokens} ток.`;
+    cls = u.lastError ? "warn" : "on";
+    $("narrator").title = (u.lastError ? `Последний сбой (день ${u.lastDay}): ${u.lastError}. Остались шаблоны. ` : "") + tokens;
+  }
+  $("narrator").className = `narrator ${cls}`;
+  $("narrator").textContent = text;
+
+  // Пока модель пишет — тихо подтягиваем готовые тексты, не трогая решения мастера.
+  clearTimeout(narratorTimer);
+  if (n.writing) narratorTimer = setTimeout(refreshTexts, 3000);
+}
+
+async function refreshTexts() {
+  const { ok, data } = await api("/api/state");
+  if (!ok || !data.hasGame || !state || data.seed !== state.seed) return;
+  state.chronicle = data.chronicle;
+  state.narrator = data.narrator;
+  renderReports();
+  renderNarrator();
 }
 
 function heroName(id) {
@@ -519,6 +583,18 @@ async function openHero(id) {
     <p><b>Мечта:</b> ${escapeHtml(h.dream)}<br><b>Ценности:</b> ${h.values.map(escapeHtml).join("; ")}</p>
     <div class="detail-grid">${h.traits.map((t) => `<span>${TRAITS[t.id] ?? t.id}</span><b>${t.value}</b>`).join("")}</div>
     <p><b>К мастеру:</b> доверие ${h.master.trust}, уважение ${h.master.respect}, привязанность ${h.master.affection}, страх ${h.master.fear}</p>
+    <b>Что думает</b> <span class="muted">(выводы из пережитого; ★ — не забудет никогда${h.masterAttitude ? `; убеждения о мастере: ${h.masterAttitude > 0 ? "+" : ""}${h.masterAttitude} к послушанию` : ""})</span>
+    ${h.beliefs.length === 0
+      ? '<p class="muted">Пока ни к каким выводам не пришёл.</p>'
+      : h.beliefs.map((b) => `<div class="tech belief ${b.emotion < 0 ? "neg" : b.emotion > 0 ? "pos" : ""}">
+          <span>${b.key ? "★ " : ""}«${escapeHtml(b.text)}»${b.firm && !b.key ? ' <span class="learned">твёрдо</span>' : ""}<br><span class="muted">${b.about === "master" ? "о мастере" : b.about === "self" ? "о себе" : "о товарище"}, с дня ${b.formedDay}</span></span>
+          <div class="bar-track"><div class="bar-fill" style="width:${b.strength}%;background:${b.emotion < 0 ? "var(--bad)" : "var(--good)"}"></div></div>
+          <span class="num">${b.strength}</span></div>`).join("")}
+    <b>Дневник</b>
+    ${h.diary.length === 0
+      ? '<p class="muted">Записей пока нет — они появляются в конце каждого дня.</p>'
+      : `<div class="diary">${h.diary.map((d, i) => `<div class="diary-entry" ${i >= 3 ? "hidden" : ""}><span class="muted">День ${d.day}</span> ${SOURCE_BADGE(d.source)}<p>${escapeHtml(d.text)}</p></div>`).join("")}</div>
+         ${h.diary.length > 3 ? '<div class="more-row"><button class="secondary small" id="moreDiary">Все записи</button></div>' : ""}`}
     <b>Приёмы</b> <span class="muted">(чутьё на позиции: ${h.sense}/100)</span>
     ${h.techniques.length === 0
       ? '<p class="muted">Пока ничему не научился. Удачные советы мастера в бою и разговоры с опытными товарищами учат — медленно.</p>'
@@ -530,6 +606,11 @@ async function openHero(id) {
     <table class="rel"><tr><th>Кому</th><th>Доверие</th><th>Привяз.</th><th>Уважение</th><th>Соперн.</th></tr>${rel}</table>
     <b>Последние события</b>
     ${h.recent.map((e) => `<div class="event ${e.emotion < 0 ? "neg" : e.emotion > 0 ? "pos" : ""}">День ${e.day}: ${escapeHtml(e.summary)}</div>`).join("")}`;
+  const more = $("moreDiary");
+  if (more) more.addEventListener("click", () => {
+    document.querySelectorAll("#heroDetails .diary-entry").forEach((el) => (el.hidden = false));
+    more.remove();
+  });
   $("heroDialog").showModal();
 }
 
@@ -538,6 +619,7 @@ function escapeHtml(s) {
 }
 
 $("runDay").addEventListener("click", runDay);
+$("olderReports").addEventListener("click", () => { showingOlderReports = !showingOlderReports; renderReports(); });
 $("newGame").addEventListener("click", newGame);
 $("fullLog").addEventListener("click", toggleFullLog);
 $("hideMinor").addEventListener("change", () => (showingFullLog ? toggleFullLog().then(toggleFullLog) : render()));

@@ -1,6 +1,8 @@
 using HeroMaster.Core.Battle;
 using HeroMaster.Core.Events;
+using HeroMaster.Core.Memory;
 using HeroMaster.Core.Model;
+using HeroMaster.Core.Narration;
 using HeroMaster.Core.Persistence;
 using HeroMaster.Core.Simulation;
 using HeroMaster.Core.World;
@@ -19,11 +21,17 @@ public sealed class GameSession
     private GameWorld? _world;
     /// <summary>Начатый день с идущим боем; null — день не начат.</summary>
     private DayInProgress? _day;
+    private readonly AiNarrator _narrator;
+    private readonly AiUsageLog _usage;
+    /// <summary>Сколько дней сейчас переписывает языковая модель.</summary>
+    private int _writing;
 
-    public GameSession(string dataDir, string savePath)
+    public GameSession(string dataDir, string savePath, AiNarrator narrator, AiUsageLog usage)
     {
         _savePath = savePath;
         _rules = GameJson.LoadRules(dataDir);
+        _narrator = narrator;
+        _usage = usage;
 
         if (File.Exists(savePath))
         {
@@ -117,7 +125,54 @@ public sealed class GameSession
         DayEngine.FinishDay(_world!, _rules, _day!);
         _day = null;
         GameJson.SaveWorld(_world!, _savePath);
+        StartNarration();
         return BuildState();
+    }
+
+    /// <summary>
+    /// Шаблонные тексты дня уже готовы; если подключена языковая модель — она перепишет их в фоне,
+    /// а панель подхватит новые тексты при следующем обновлении. На игру это не влияет.
+    /// </summary>
+    private void StartNarration()
+    {
+        if (!_narrator.Enabled || _world == null)
+            return;
+        var world = _world;
+        int day = world.Day;
+        var brief = DayBrief.Build(world, _rules);
+        Interlocked.Increment(ref _writing);
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var texts = await _narrator.Rewrite(brief, CancellationToken.None);
+                lock (_lock)
+                {
+                    if (ReferenceEquals(_world, world)) // за это время не начали новую партию
+                    {
+                        DayBrief.Apply(world, day, texts.Diaries, texts.Morning, texts.Battle);
+                        // Посреди боя не сохраняем: мир пишется на диск только в конце дня (тексты уйдут вместе с ним).
+                        if (_day == null)
+                            GameJson.SaveWorld(world, _savePath);
+                    }
+                }
+                _usage.Success(texts.Usage, day);
+            }
+            catch (AiNarrationException ex)
+            {
+                _usage.Failure(ex.Message, ex.Usage, day);
+            }
+            catch (Exception ex)
+            {
+                var message = ex is OperationCanceledException ? "модель не ответила вовремя" : ex.Message;
+                _usage.Failure(message.Length > 300 ? message[..300] + "…" : message, null, day);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _writing);
+            }
+        });
     }
 
     private object BattleSnapshot(BattleState s, int feedFrom)
@@ -205,7 +260,19 @@ public sealed class GameSession
                     var r = _world.GetRelationship(id, o.Id);
                     return new { o.Id, o.Name, r.Trust, r.Affection, r.Respect, r.Rivalry, r.Fear };
                 }),
-                recent = _world.Log.Events.Where(e => e.Actors.Contains(id)).Reverse().Take(15).Select(EventDto)
+                recent = _world.Log.Events.Where(e => e.Actors.Contains(id)).Reverse().Take(15).Select(EventDto),
+                diary = h.Diary.AsEnumerable().Reverse().Select(d => new { d.Day, d.Text, d.Source }),
+                beliefs = Reflection.Strongest(h, h.Beliefs.Count).Select(b => new
+                {
+                    b.Text,
+                    b.Strength,
+                    b.Emotion,
+                    key = b.IsKeyMemory,
+                    firm = b.Strength >= _rules.Config.Memory.StrongFrom,
+                    b.FormedDay,
+                    about = b.AboutId == Ids.Master ? "master" : b.AboutId == id ? "self" : "hero"
+                }),
+                masterAttitude = Reflection.MasterAttitude(_rules, h)
             };
         }
     }
@@ -219,7 +286,7 @@ public sealed class GameSession
     private object BuildState()
     {
         if (_world == null)
-            return new { hasGame = false };
+            return new { hasGame = false, narrator = NarratorDto() };
 
         var w = _world;
         var c = _rules.Config;
@@ -255,7 +322,23 @@ public sealed class GameSession
             lastDay = w.Log.ForDay(w.Day).Select(EventDto),
             // Идущий бой: после перезагрузки страница продолжит показ с того же места.
             battle = _day?.Battle == null ? null : BattleSnapshot(_day.Battle, 0),
-            fallen = w.Fallen.Select(f => new { f.Name, f.Stars, f.Profession, f.Day, f.Where, f.KilledBy })
+            fallen = w.Fallen.Select(f => new { f.Name, f.Stars, f.Profession, f.Day, f.Where, f.KilledBy }),
+            // Сводки и отчёты о боях: свежие первыми.
+            chronicle = w.Chronicle.AsEnumerable().Reverse().Take(12).Select(r => new { r.Day, r.Kind, r.Title, r.Text, r.Source }),
+            narrator = NarratorDto()
+        };
+    }
+
+    private object NarratorDto()
+    {
+        var u = _usage.Snapshot();
+        return new
+        {
+            enabled = _narrator.Enabled,
+            model = _narrator.Model,
+            reason = _narrator.DisabledReason,
+            writing = Volatile.Read(ref _writing) > 0,
+            usage = new { u.Calls, u.Failures, u.InputTokens, u.OutputTokens, u.CacheReadTokens, u.CacheWriteTokens, u.LastError, u.LastDay }
         };
     }
 
