@@ -9,7 +9,7 @@ namespace HeroMaster.Core.Simulation
     /// Ухудшение статуса наступает сразу, а улучшение — только с запасом доверия (recoverMargin),
     /// иначе статус «дребезжал» бы на границе. В бойкот герой уходит только после
     /// нескольких ночей «на грани» — у мастера всегда есть время заметить и исправить.
-    /// Рефлексия и память появятся здесь в группе 4.
+    /// В конце ночи — рефлексия: герои делают выводы из событий дня (<see cref="Memory.Reflection"/>).
     /// </summary>
     public static class NightPhase
     {
@@ -33,6 +33,8 @@ namespace HeroMaster.Core.Simulation
             foreach (var r in world.Relationships)
                 if (r.To != Ids.Master && r.Rivalry > 0)
                     r.Rivalry = GameWorld.Clamp(r.Rivalry - a.RivalryDecayPerNight);
+
+            Memory.Reflection.Run(world, rules);
         }
 
         /// <summary>

@@ -70,6 +70,12 @@ namespace HeroMaster.Core.Config
                 errors.Add("memory: лимиты памяти заданы неверно.");
             if (Memory.KeyMemoryImportance < 1 || Memory.KeyMemoryImportance > 10)
                 errors.Add("memory.keyMemoryImportance: ожидается 1–10.");
+            if (Memory.DecayPerNight < 0 || Memory.StrongFrom < 1 || Memory.StrongFrom > 100)
+                errors.Add("memory: decayPerNight ≥ 0, strongFrom 1–100.");
+            if (Memory.MasterBeliefDivisor < 1 || Memory.MasterBeliefMax < 0)
+                errors.Add("memory: masterBeliefDivisor ≥ 1, masterBeliefMax ≥ 0.");
+            if (Memory.MaxDiaryEntries < 1 || Memory.MaxReports < 1)
+                errors.Add("memory: maxDiaryEntries и maxReports должны быть ≥ 1.");
 
             if (!(Trust.DiscontentedBelow > Trust.OnEdgeBelow && Trust.OnEdgeBelow > Trust.BoycottBelow && Trust.BoycottBelow >= 0))
                 errors.Add("trust: пороги должны убывать: discontentedBelow > onEdgeBelow > boycottBelow ≥ 0.");
@@ -164,6 +170,15 @@ namespace HeroMaster.Core.Config
         public int MaxKeyMemories { get; set; } = 10;
         public int KeyMemoryImportance { get; set; } = 9;
         public int ForgetMinorEventsAfterDays { get; set; } = 14;
+        /// <summary>На сколько за ночь слабеет убеждение, которое сегодня ничем не подтвердилось.</summary>
+        public int DecayPerNight { get; set; } = 1;
+        /// <summary>С какой силы убеждение считается твёрдым (об этом пишется в журнал).</summary>
+        public int StrongFrom { get; set; } = 50;
+        /// <summary>Убеждения о мастере влияют на послушание: сумма (окраска × сила) / делитель, не больше ±max.</summary>
+        public int MasterBeliefDivisor { get; set; } = 20;
+        public int MasterBeliefMax { get; set; } = 8;
+        public int MaxDiaryEntries { get; set; } = 30;
+        public int MaxReports { get; set; } = 60;
     }
 
     public sealed class TrustConfig

@@ -23,7 +23,13 @@
     "maxBeliefs": 30,
     "maxKeyMemories": 10,
     "keyMemoryImportance": 9,
-    "forgetMinorEventsAfterDays": 14
+    "forgetMinorEventsAfterDays": 14,
+    "decayPerNight": 1,
+    "strongFrom": 50,
+    "masterBeliefDivisor": 20,
+    "masterBeliefMax": 8,
+    "maxDiaryEntries": 30,
+    "maxReports": 60
   },
 
   "master": {

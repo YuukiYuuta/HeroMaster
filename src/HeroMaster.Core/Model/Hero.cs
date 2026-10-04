@@ -83,14 +83,21 @@ namespace HeroMaster.Core.Model
         public List<int> GiftDays { get; set; } = new();
     }
 
-    /// <summary>Убеждение, выведенное из событий. Ключевые воспоминания не забываются.</summary>
+    /// <summary>
+    /// Убеждение, выведенное из событий: «Мастер делит добычу честно», «С Вейлом невозможно договориться».
+    /// Сила 0–100 растёт от подтверждений и угасает без них. Ключевые воспоминания не забываются.
+    /// </summary>
     public sealed class Belief
     {
         public string Id { get; set; } = "";
+        /// <summary>О ком убеждение: master, id героя (в том числе самого себя).</summary>
         public string? AboutId { get; set; }
         public string Text { get; set; } = "";
         public int Strength { get; set; }
+        /// <summary>Окраска -5…5: тёплое убеждение или горькое.</summary>
+        public int Emotion { get; set; }
         public int FormedDay { get; set; }
+        public int LastReinforcedDay { get; set; }
         public List<long> SourceEventIds { get; set; } = new();
         public bool IsKeyMemory { get; set; }
     }
@@ -138,6 +145,8 @@ namespace HeroMaster.Core.Model
         public int Purse { get; set; }
         public List<Belief> Beliefs { get; set; } = new();
         public List<Technique> Techniques { get; set; } = new();
+        /// <summary>Личный дневник: запись за каждый прожитый день (последние записи).</summary>
+        public List<Narration.DiaryEntry> Diary { get; set; } = new();
 
         /// <summary>Нужная форма слова по полу героя: G("согласился", "согласилась").</summary>
         public string G(string male, string female) => Gender == Gender.Female ? female : male;

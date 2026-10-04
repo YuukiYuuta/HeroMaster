@@ -112,6 +112,9 @@ namespace HeroMaster.Core.Battle
             {
                 Id = hero.Id,
                 Name = hero.Name,
+                NameGenitive = hero.NameGenitive,
+                NameInstrumental = hero.NameInstrumental,
+                Gender = hero.Gender,
                 Stars = hero.Stars,
                 Profession = hero.Profession,
                 Day = world.Day,
@@ -128,9 +131,10 @@ namespace HeroMaster.Core.Battle
                     TrustRules.Change(world, other.Id, -e.DeathBlameTrustLoss);
             }
 
-            world.Log.Append(world.Day, DayPhase.Expedition, "hero_died",
+            var died = world.Log.Append(world.Day, DayPhase.Expedition, "hero_died",
                 $"{hero.Name} ({hero.Profession.ToLowerInvariant()}, {new string('★', hero.Stars)}) {hero.G("погиб", "погибла")} в бою: «{s.Mission.Name}». Отряд скорбит.",
                 importance: 10, emotion: -5, actors: world.Heroes.Select(h => h.Id).Append(hero.Id).Append(Ids.Master).ToArray());
+            died.Data["hero"] = hero.Id;
         }
 
         private static void Summarize(GameWorld world, BattleState s, List<string> survivors)

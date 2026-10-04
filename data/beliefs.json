@@ -1,0 +1,53 @@
+// Какие выводы герой делает из событий дня (ночная рефлексия).
+// event   — тип события из журнала;
+// when    — positive / negative / neutral: по эмоции события (пусто — любое);
+// subject — кто делает вывод: first (первый участник), second (второй), all (все герои-участники);
+// about   — о ком вывод: master, self, other (другой герой-участник), data:<ключ> (id героя из данных события);
+// text    — формулировка; {other}, {otherGen}, {otherIns} — имя другого героя в падежах,
+//           {g:он|она} — форма по полу того, кто делает вывод;
+// gain    — насколько событие укрепляет убеждение (сила 0–100);
+// emotion — окраска убеждения от -5 до 5 (для убеждений о мастере влияет на послушание);
+// opposes — какие убеждения о том же лице это событие ослабляет;
+// key     — ключевое воспоминание: не забывается.
+{
+  "rules": [
+    { "id": "master_greedy", "event": "loot_kept", "subject": "all", "about": "master",
+      "text": "Мастер забирает добычу себе", "gain": 30, "emotion": -3, "opposes": ["master_fair"] },
+    { "id": "master_unfair", "event": "loot_share", "when": "negative", "subject": "first", "about": "master",
+      "text": "Мастер делит добычу нечестно", "gain": 15, "emotion": -2, "opposes": ["master_fair"] },
+    { "id": "master_fair", "event": "loot_share", "when": "positive", "subject": "first", "about": "master",
+      "text": "Мастер делит добычу честно", "gain": 10, "emotion": 2, "opposes": ["master_greedy", "master_unfair"] },
+    { "id": "master_cares", "event": "master_gift", "when": "positive", "subject": "first", "about": "master",
+      "text": "Мастер обо мне заботится", "gain": 8, "emotion": 2, "opposes": ["master_bribes"] },
+    { "id": "master_bribes", "event": "master_gift", "when": "neutral", "subject": "first", "about": "master",
+      "text": "Мастер пытается купить моё расположение", "gain": 10, "emotion": -1, "opposes": ["master_cares"] },
+    { "id": "advice_good", "event": "advice_worked", "subject": "first", "about": "master",
+      "text": "Советы мастера в бою стоит слушать", "gain": 12, "emotion": 2, "opposes": ["advice_bad", "master_confused"] },
+    { "id": "advice_bad", "event": "advice_failed", "subject": "first", "about": "master",
+      "text": "Советы мастера в бою не спасают", "gain": 15, "emotion": -2, "opposes": ["advice_good"] },
+    { "id": "master_confused", "event": "battle_advice_spam", "subject": "all", "about": "master",
+      "text": "В бою мастер сам не знает, чего хочет", "gain": 10, "emotion": -2, "opposes": ["advice_good"] },
+
+    { "id": "rival", "event": "quarrel", "subject": "all", "about": "other",
+      "text": "С {otherIns} невозможно договориться", "gain": 20, "emotion": -2, "opposes": ["comrade"] },
+    { "id": "comrade", "event": "socialized", "subject": "all", "about": "other",
+      "text": "{other} — хороший товарищ", "gain": 6, "emotion": 2, "opposes": ["rival"] },
+    { "id": "mentor", "event": "teaching", "subject": "second", "about": "other",
+      "text": "У {otherGen} есть чему поучиться", "gain": 10, "emotion": 2 },
+    { "id": "shaken", "event": "battle_morale_broken", "subject": "first", "about": "other",
+      "text": "То, что случилось с {otherIns} в бою, не выходит из головы", "gain": 15, "emotion": -2 },
+    { "id": "grief", "event": "hero_died", "subject": "all", "about": "data:hero",
+      "text": "Не могу забыть гибель {otherGen}", "gain": 60, "emotion": -4, "key": true },
+
+    { "id": "mortal", "event": "battle_injured", "subject": "first", "about": "self",
+      "text": "Башня может убить меня в любой день", "gain": 20, "emotion": -2, "opposes": ["team_holds"] },
+    { "id": "team_holds", "event": "expedition_result", "when": "positive", "subject": "all", "about": "self",
+      "text": "Вместе мы можем выстоять", "gain": 8, "emotion": 2, "opposes": ["mortal"] },
+    { "id": "proud_fighter", "event": "mvp", "subject": "first", "about": "self",
+      "text": "Я сражаюсь не хуже других", "gain": 12, "emotion": 2 },
+    { "id": "learning", "event": "technique_learned", "subject": "first", "about": "self",
+      "text": "Я учусь выживать здесь", "gain": 10, "emotion": 1 },
+    { "id": "purpose", "event": "found_purpose", "subject": "first", "about": "self",
+      "text": "Выбраться из Башни можно, только став сильнее", "gain": 50, "emotion": 1, "key": true }
+  ]
+}

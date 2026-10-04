@@ -8,7 +8,8 @@ using HeroMaster.Core.World;
 namespace HeroMaster.Core.Simulation
 {
     /// <summary>
-    /// Игровой день: решения мастера → вылазка (живой бой) → жизнь на базе → ночь.
+    /// Игровой день: решения мастера → вылазка (живой бой) → жизнь на базе → ночь → тексты дня
+    /// (дневники, сводка, отчёт о бое; шаблоны — сразу, языковая модель может переписать их позже).
     /// День можно прожить целиком (<see cref="RunDay"/>) или по частям: начать, провести бой
     /// тик за тиком (панель показывает его в реальном времени) и закончить.
     /// </summary>
@@ -56,7 +57,9 @@ namespace HeroMaster.Core.Simulation
             BaseLifePhase.Run(world, rules, day.Decisions.Hints, members);
             NightPhase.Run(world, rules);
 
-            return world.Log.Events.Where(e => e.Id >= day.FirstEventId).ToList();
+            var events = world.Log.Events.Where(e => e.Id >= day.FirstEventId).ToList();
+            Narration.TemplateNarrator.WriteDay(world, rules, events);
+            return events;
         }
     }
 

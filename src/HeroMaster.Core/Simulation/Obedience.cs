@@ -27,7 +27,8 @@ namespace HeroMaster.Core.Simulation
     /// <summary>
     /// Послушание в бою. На вылазку герой идёт всегда — так велит контракт призыва.
     /// Но в самом рейде он решает, как сражаться: охотно, честно, вполсилы или вовсе отказаться драться.
-    /// Готовность считает код: доверие + поправки на решимость, дисциплину, усталость, стресс, раны и состав команды.
+    /// Готовность считает код: доверие + поправки на решимость, дисциплину, усталость, стресс, состав команды
+    /// и убеждения о мастере (старые обиды помнятся, даже когда доверие уже вернулось).
     /// </summary>
     public static class Obedience
     {
@@ -44,7 +45,8 @@ namespace HeroMaster.Core.Simulation
                             + (hero.State.Resolve - 50) * c.ResolvePercent / 100
                             + (hero.Traits.Discipline - 50) * c.DisciplinePercent / 100
                             - hero.State.Fatigue * c.FatiguePercent / 100
-                            - hero.State.Stress * c.StressPercent / 100;
+                            - hero.State.Stress * c.StressPercent / 100
+                            + Memory.Reflection.MasterAttitude(rules, hero);
 
             foreach (var otherId in team)
             {

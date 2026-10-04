@@ -6,11 +6,13 @@ using HeroMaster.Core.Content;
 
 namespace HeroMaster.Core.Simulation
 {
-    /// <summary>Неизменяемые правила партии: каталог героев, числа баланса, монстры и миссии.</summary>
+    /// <summary>Неизменяемые правила партии: каталог героев, числа баланса, монстры, миссии и правила памяти.</summary>
     public sealed class GameRules
     {
-        public GameRules(HeroCatalog catalog, BalanceConfig config, MonsterCatalog monsters, IEnumerable<MissionDefinition> missions)
+        public GameRules(HeroCatalog catalog, BalanceConfig config, MonsterCatalog monsters, IEnumerable<MissionDefinition> missions,
+            Memory.BeliefCatalog? beliefs = null)
         {
+            Beliefs = beliefs ?? new Memory.BeliefCatalog();
             Catalog = catalog;
             Config = config;
             Monsters = monsters;
@@ -21,6 +23,8 @@ namespace HeroMaster.Core.Simulation
         public BalanceConfig Config { get; }
         public MonsterCatalog Monsters { get; }
         public IReadOnlyList<MissionDefinition> Missions { get; }
+        /// <summary>Правила ночной рефлексии: какие выводы герои делают из событий.</summary>
+        public Memory.BeliefCatalog Beliefs { get; }
 
         public MissionDefinition Mission(string id) =>
             Missions.FirstOrDefault(m => m.Id == id)

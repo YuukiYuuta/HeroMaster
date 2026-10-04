@@ -25,6 +25,8 @@ namespace HeroMaster.Core.World
         public List<FallenHero> Fallen { get; set; } = new();
         public List<Relationship> Relationships { get; set; } = new();
         public EventLog Log { get; set; } = new();
+        /// <summary>Утренние сводки и отчёты о боях — тексты для мастера (последние дни).</summary>
+        public List<Narration.DayReport> Chronicle { get; set; } = new();
 
         public Hero GetHero(string id) =>
             Heroes.FirstOrDefault(h => h.Id == id)
@@ -54,6 +56,9 @@ namespace HeroMaster.Core.World
     {
         public string Id { get; set; } = "";
         public string Name { get; set; } = "";
+        public string NameGenitive { get; set; } = "";
+        public string NameInstrumental { get; set; } = "";
+        public Gender Gender { get; set; }
         public int Stars { get; set; }
         public string Profession { get; set; } = "";
         public int Day { get; set; }

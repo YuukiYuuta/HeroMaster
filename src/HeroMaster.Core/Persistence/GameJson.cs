@@ -46,7 +46,7 @@ namespace HeroMaster.Core.Persistence
         }
 
         /// <summary>
-        /// Загружает все правила из папки data: heroes.json, balance.json, monsters.json и missions/*.json.
+        /// Загружает все правила из папки data: heroes.json, balance.json, monsters.json, beliefs.json и missions/*.json.
         /// Любая ошибка в данных — понятное сообщение со списком проблем.
         /// </summary>
         public static Simulation.GameRules LoadRules(string dataDir)
@@ -66,7 +66,11 @@ namespace HeroMaster.Core.Persistence
                 missions.Add(mission);
             }
 
-            var rules = new Simulation.GameRules(catalog, config, monsters, missions);
+            var beliefsPath = Path.Combine(dataDir, "beliefs.json");
+            var beliefs = Deserialize<Memory.BeliefCatalog>(File.ReadAllText(beliefsPath, Encoding.UTF8));
+            ThrowIfInvalid(beliefsPath, beliefs.Validate());
+
+            var rules = new Simulation.GameRules(catalog, config, monsters, missions, beliefs);
             if (missions.All(m => m.Id != config.Expedition.MissionId))
                 throw new InvalidDataException($"В balance.json указана миссия «{config.Expedition.MissionId}», но такой нет в data/missions.");
             return rules;
